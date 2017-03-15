@@ -11,23 +11,16 @@ use Mail;
 use DB;
 use DateTime;
 use Log;
-
+//auth
 use JWTAuth;
 use Tymon\JWTAuthExceptions\JWTException;
-
+//tables
 use App\Models\Logins;
-use App\Models\UserRegister;
-use Hash;
+use App\Models\ToiletRegister;
 
-class UserController extends Controller
+
+class ToiletController extends Controller
 {
-    // public function __construct()
-    // {
-    //    // Apply the jwt.auth middleware to all methods in this controller
-    //    // except for the authenticate method. We don't want to prevent
-    //    // the user from retrieving their token if they don't already have it
-    //    $this->middleware('jwt-auth');
-    // }
     /**
      * Display a listing of the resource.
      *
@@ -39,18 +32,17 @@ class UserController extends Controller
     }
 
     /**
-     *  for creating a new user.
+     * create new toilet entry
      *
      * @return \Illuminate\Http\Response
      */
-
     public function create(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
-            'user_email' => 'required|email|unique:login,username',
-            'user_contact' => 'required|digits:10|unique:User_Register,contact',
-            'user_password' => 'required|min:5'
+            'toilet_location' => 'required|min:5'
+            //'toilet_ward' => 'required|email|unique:login,username',
+           // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
+           // 'toilet_organisation' => 'required|min:5'
         ]);
 
         if ($validator->fails()) {
@@ -59,24 +51,18 @@ class UserController extends Controller
 
         DB::transaction(function($request) use ($request){
 
-            //adding user details
-            $v_token = str_random(50);
-            $userdetails=new UserRegister;
-            $userdetails->name=$request->user_name;
-            $userdetails->email=$request->user_email;
-            $userdetails->contact=$request->user_contact;
-            $userdetails->gender=$request->user_gender;
-            $userdetails->age=$request->user_age;
-            $userdetails->role=1;
-            $userdetails->save();
-            //adding login credentials
-            $userlogin=new Logins;
-            $userlogin->username=$request->user_email;
-            $userlogin->password=Hash::make($request->user_password);
-            $userlogin->role=1;
-            $userlogin->active=1;//change it later, -2 for deactivated
-            $userlogin->verify_token=$v_token;//use it for sending confirmation mail
-            $userlogin->save();
+            //adding toilet details
+            $toiletdetails=new ToiletRegister;
+            $toiletdetails->location=$request->toilet_location;
+            if($request->toilet_ward!=null)
+                $toiletdetails->ward=$request->toilet_ward;
+            if($request->toilet_address!=null)
+                $toiletdetails->address=$request->toilet_address;
+            if($request->toilet_organisation!=null)
+                $toiletdetails->organisation=$request->toilet_organisation;
+            if($request->toilet_ownership!=null)
+                $toiletdetails->ownership=$request->toilet_ownership;
+            $toiletdetails->save();
             
 
 
@@ -94,7 +80,7 @@ class UserController extends Controller
         });//end of transaction
 
      // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
-        $message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
+        $message=array("success"=>'Thank you for registering the new Toilet! It will be visible on the map after verification');
         return json_encode($message);
     }//end of create
 
@@ -117,13 +103,12 @@ class UserController extends Controller
      */
     public function show()
     {
-        //
-        // $users = Logins::all();
-        // return $users;
-        $user = JWTAuth::parseToken()->authenticate();
-        $username=$user->username;
-        return response()->json(compact('user'));
-
+         //
+        $toiletdetails = ToiletRegister::all();
+        return $toiletdetails;
+        // $user = JWTAuth::parseToken()->authenticate();
+        // $username=$user->username;
+        // return response()->json(compact('user'));
     }
 
     /**

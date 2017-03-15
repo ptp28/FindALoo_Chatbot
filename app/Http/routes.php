@@ -10,7 +10,7 @@
 | and give it the controller to call when that URI is requested.
 |
 */
-
+/*****************User**************************/
 Route::get('/', function () {
     return view('welcome');
 });
@@ -46,4 +46,16 @@ Route::get('/showUser',[
 	'middleware' => 'jwt-auth',
 	'as' => 'showUser',
 	'uses' => 'UserController@show'
+]);
+/**************************Toilets******************************/
+Route::POST('register/addToilet',[
+	'middleware' => 'jwt-auth',
+	'as' => 'addToilet',
+	'uses' => 'ToiletController@create'
+]);
+
+Route::POST('/showToilets',[
+	'middleware' => 'jwt-auth',
+	'as' => 'showToilets',
+	'uses' => 'ToiletController@show'
 ]);
