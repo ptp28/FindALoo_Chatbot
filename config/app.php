@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Kolkata',
 
     /*
     |--------------------------------------------------------------------------
@@ -145,6 +145,10 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
+        /*
+        * Custom
+        */
+        Intervention\Image\ImageServiceProvider::class,
 
     ],
 

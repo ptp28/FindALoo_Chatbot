@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use Validator;
 use Mail;
 use DB;
-use DateTime;
+//use DateTime;
 use Log;
 //auth
 use JWTAuth;
@@ -18,8 +18,11 @@ use Tymon\JWTAuthExceptions\JWTException;
 use App\Models\Logins;
 use App\Models\ToiletRegister;
 use App\Models\UserRegister;
-
-
+use App\Models\ToiletImages;
+//image
+use Image;
+use File;
+use Storage;
 class ToiletController extends Controller
 {
     /**
@@ -127,15 +130,46 @@ class ToiletController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * photo upload for Toilets
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function upload(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'toiletPht' => 'required|image:jpeg,bmp,png|max:3000',
+            ],
+
+            [
+            'toiletPht.required' => 'Please select a photo.',
+            'toiletPht.image' => 'Please upload only .jpg/.png/.bmp file.',
+            'toiletPht.max' => 'Size of the file should be less than 3MB.',
+            // 'toiletPht.dimensions' => 'The image should be of at least 800 x 600 resolution'
+        ]);
+        if ($validator->fails()) {
+            return json_encode($validator->errors());
+        }
+        DB::transaction(function($request) use ($request){
+            $path = storage_path().'/upload/toiletImages/';
+            $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+            $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+            $ext = strtolower($request->file('toiletPht')->getClientOriginalExtension());
+            $filename = str_random(15).".".$ext;
+            $request->file('toiletPht')->move($path, $filename);
+            $toiletPhoto=new ToiletImages;
+            $toiletPhoto->user_id=$userid;
+            $toiletPhoto->toilet_id=$request->toilet_id;
+            $toiletPhoto->image_name=$filename;
+            if($request->image_title!=null)
+                $toiletPhoto->image_title=$request->image_title;
+            $toiletPhoto->active=1;
+            $toiletPhoto->save();
+        });
+        $message=array("success"=>'Image uploaded');
+        return json_encode($message);
+
     }
 
     /**
