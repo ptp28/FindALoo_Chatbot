@@ -17,6 +17,7 @@ use Tymon\JWTAuthExceptions\JWTException;
 //tables
 use App\Models\Logins;
 use App\Models\ToiletRegister;
+use App\Models\UserRegister;
 
 
 class ToiletController extends Controller
@@ -37,7 +38,6 @@ class ToiletController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create(Request $request){
-
         $validator = Validator::make($request->all(), [
             'toilet_location' => 'required|min:5'
             //'toilet_ward' => 'required|email|unique:login,username',
@@ -52,8 +52,12 @@ class ToiletController extends Controller
         DB::transaction(function($request) use ($request){
 
             //adding toilet details
+            $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+            $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+
             $toiletdetails=new ToiletRegister;
             $toiletdetails->location=$request->toilet_location;
+            $toiletdetails->user_id=$userid;
             if($request->toilet_ward!=null)
                 $toiletdetails->ward=$request->toilet_ward;
             if($request->toilet_address!=null)
