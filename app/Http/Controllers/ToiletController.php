@@ -152,7 +152,7 @@ class ToiletController extends Controller
             return json_encode($validator->errors());
         }
         DB::transaction(function($request) use ($request){
-            $path = storage_path().'/upload/toiletImages/';
+            $path = public_path().'/img/toilets/';
             $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
             $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
             $ext = strtolower($request->file('toiletPht')->getClientOriginalExtension());
