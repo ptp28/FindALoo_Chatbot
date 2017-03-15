@@ -65,3 +65,8 @@ Route::POST('/upldToiletImage',[
 	'as' => 'upldToiletImage',
 	'uses' => 'ToiletController@upload'
 ]);
+Route::get('/showToltImages',[
+	'middleware' => 'jwt-auth',
+	'as' => 'showToltImages',
+	'uses' => 'ToiletController@showImages'
+]);

@@ -171,6 +171,17 @@ class ToiletController extends Controller
         return json_encode($message);
 
     }
+    /**
+     * for fetching all images
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function showImages()
+    {
+        $ToiletImages = ToiletImages::all();
+        return $ToiletImages;
+    }
 
     /**
      * Remove the specified resource from storage.
