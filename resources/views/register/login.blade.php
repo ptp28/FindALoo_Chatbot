@@ -34,7 +34,7 @@
 					@endif
 					</div>
 					<div class="col s12 l6">
-						<div class="card-panel teal lighten-2 white-text">eYRC 2016 Sign Up</div>
+						<div class="card-panel teal lighten-2 white-text">Sign In</div>
 						<form method="POST" action="{!!route('user_login')!!}">
 							<input type="hidden" name="_token" value="{{ csrf_token() }}">
 							<div class="row">

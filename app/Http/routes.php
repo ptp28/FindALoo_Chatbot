@@ -14,6 +14,11 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::POST('register/addUser',[
+	'as' => 'addUser',
+	'uses' => 'UserController@create'
+]);
 Route::any('/login', [
 	'as' => 'login',
 	'uses' => 'Auth\AuthenticateController@login'
