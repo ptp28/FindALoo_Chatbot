@@ -87,8 +87,8 @@ class ToiletController extends Controller
         });//end of transaction
 
      // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
-        $message=array("success"=>'Thank you for registering the new Toilet! It will be visible on the map after verification');
-        return json_encode($message);
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering the new Toilet! It will be visible on the map after verification");
+        return json_encode($data);
     }//end of create
 
     /**
@@ -112,7 +112,8 @@ class ToiletController extends Controller
     {
          //
         $toiletdetails = ToiletRegister::all();
-        return $toiletdetails;
+        $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        return json_encode($data);
         // $user = JWTAuth::parseToken()->authenticate();
         // $username=$user->username;
         // return response()->json(compact('user'));
@@ -149,7 +150,8 @@ class ToiletController extends Controller
             // 'toiletPht.dimensions' => 'The image should be of at least 800 x 600 resolution'
         ]);
         if ($validator->fails()) {
-            return json_encode($validator->errors());
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Photo upload failed");
+            return json_encode($data);
         }
         DB::transaction(function($request) use ($request){
             $path = public_path().'/img/toilets/';
@@ -167,8 +169,8 @@ class ToiletController extends Controller
             $toiletPhoto->active=1;
             $toiletPhoto->save();
         });
-        $message=array("success"=>'Image uploaded');
-        return json_encode($message);
+        $data=array("status"=>"success","data"=>null, "message"=>"Image uploaded");
+        return json_encode($data);
 
     }
     /**
@@ -180,7 +182,8 @@ class ToiletController extends Controller
     public function showImages()
     {
         $ToiletImages = ToiletImages::all();
-        return $ToiletImages;
+        $data=array("status"=>"success","data"=>$ToiletImages, "message"=>"All Images fetched");
+        return json_encode($data);
     }
 
     /**

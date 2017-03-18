@@ -8,6 +8,7 @@ namespace App\Http\Controllers\Auth;
 use App\Models\Logins;
 use Validator;
 // use Illuminate\Http\Request;
+use DateTime;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
@@ -32,15 +33,25 @@ class AuthenticateController extends Controller
         try {
             // attempt to verify the credentials and create a token for the user
             if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'invalid_credentials'], 401);
+                $data=array("status"=>"error","data"=>null, "message"=>"Invalid Credentials");
+                return response()->json($data);
+                //return response()->json(['error' => 'invalid_credentials'], 401);
             }
         } catch (JWTException $e) {
             // something went wrong whilst attempting to encode the token
-            return response()->json(['error' => 'could_not_create_token'], 500);
+            $data=array("status"=>"error","data"=>null, "message"=>"Could not create token");
+            return response()->json($data);
+            //return response()->json(['error' => 'could_not_create_token'], 500);
         }
 
         // all good so return the token
-        return response()->json(compact('token'));
+        $logincount=Logins::where('username',$request->email)->first();
+        $logincount->login_count=$logincount->login_count+1;
+        $logincount->last_login=new DateTime;
+        $logincount->save();
+        $data=array("status"=>"success","data"=>$token, "message"=>"Successfully logged in");
+        return response()->json($data);
+        // return response()->json(compact('token'));
     }
     public function login(){
         // $data = Notice::all();

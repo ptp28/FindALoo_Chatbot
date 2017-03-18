@@ -54,7 +54,8 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode($validator->errors());
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Registration failed");
+            return json_encode($data);
         }
 
         DB::transaction(function($request) use ($request){
@@ -80,11 +81,11 @@ class UserController extends Controller
             
 
 
-            // //Send mail to user for confirmation
-            // Mail::queue('email.team_member_invite', ['email' => $request->user_email, 'token' => $v_token_mem1, 'password' => $mem1_pwd, 'name' => ucwords(strtolower($request->teamMember1_first_name)), 'team_id' => $teamId], function($message) use ($mem1_email)
+            //Send mail to user for confirmation
+            // Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => $v_token, 'password' => $user_password, 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
             // {
             //     $message
-            //     ->to($mem1_email)
+            //     ->to($user_email)
             //     ->cc('admin@e-yantra.org')
             //     ->subject('Registration: FindaLoo')
             //     ->from('admin@e-yantra.org', 'e-Yantra IITB');
@@ -92,10 +93,9 @@ class UserController extends Controller
 
            
         });//end of transaction
-
-     // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
-        $message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
-        return json_encode($message);
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! A confirmation email has been sent to your registered email id");
+        //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
+        return json_encode($data);
     }//end of create
 
     /**
@@ -121,8 +121,23 @@ class UserController extends Controller
         // $users = Logins::all();
         // return $users;
         $user = JWTAuth::parseToken()->authenticate();
-        $username=$user->username;
-        return response()->json(compact('user'));
+        if($user->role==3)//list users for admin
+        {
+            $userdetails=UserRegister::all();//getting user details
+            //$userdetails=$userdetails[0];
+            $data=array("status"=>"success","data"=>$userdetails, "message"=>"User details fetched");
+            return response()->json($data);
+        }
+        else if($user->role==2)
+        {
+            return "Moderator goes here";
+        }
+        //normal user goes here
+        $userdetails=UserRegister::where(['email'=>$user->username])->get();//getting user details
+        $userdetails=$userdetails[0];
+        $data=array("status"=>"success","data"=>$userdetails, "message"=>"User details fetched");
+        return response()->json($data);
+        
 
     }
 
@@ -144,7 +159,7 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         //
     }
