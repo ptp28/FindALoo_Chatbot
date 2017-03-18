@@ -54,8 +54,8 @@ Route::POST('register/addToilet',[
 	'uses' => 'ToiletController@create'
 ]);
 
-Route::POST('/showToilets',[
-	'middleware' => 'jwt-auth',
+Route::GET('/showToilets',[
+	//'middleware' => 'jwt-auth',
 	'as' => 'showToilets',
 	'uses' => 'ToiletController@show'
 ]);
