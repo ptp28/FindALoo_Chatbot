@@ -79,17 +79,19 @@ class UserController extends Controller
             $userlogin->verify_token=$v_token;//use it for sending confirmation mail
             $userlogin->save();
             
+            $user_email=$request->user_email;//to prevent serialisation error
 
 
             //Send mail to user for confirmation
-            // Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => $v_token, 'password' => $user_password, 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
-            // {
-            //     $message
-            //     ->to($user_email)
-            //     ->cc('admin@e-yantra.org')
-            //     ->subject('Registration: FindaLoo')
-            //     ->from('admin@e-yantra.org', 'e-Yantra IITB');
-            // });
+            Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => $v_token, 'password' => $request->user_password, 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
+            {
+                
+                $message
+                ->to($user_email)
+                ->cc('admin@e-yantra.org')
+                ->subject('Registration: FindaLoo')
+                ->from('admin@e-yantra.org', 'e-Yantra IITB');
+            });
 
            
         });//end of transaction
