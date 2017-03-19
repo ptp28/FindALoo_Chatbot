@@ -42,14 +42,16 @@ class ToiletController extends Controller
      */
     public function create(Request $request){
         $validator = Validator::make($request->all(), [
-            'toilet_location' => 'required|min:5'
+            'toilet_lat' => 'required|min:5',
+            'toilet_lng' => 'required|min:5',
             //'toilet_ward' => 'required|email|unique:login,username',
            // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
            // 'toilet_organisation' => 'required|min:5'
         ]);
 
         if ($validator->fails()) {
-            return json_encode($validator->errors());
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Toilet Registration failed");
+            return json_encode($data);
         }
 
         DB::transaction(function($request) use ($request){
@@ -59,7 +61,8 @@ class ToiletController extends Controller
             $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
 
             $toiletdetails=new ToiletRegister;
-            $toiletdetails->location=$request->toilet_location;
+            $toiletdetails->lat=$request->toilet_lat;
+            $toiletdetails->lng=$request->toilet_lng;
             $toiletdetails->user_id=$userid;
             if($request->toilet_ward!=null)
                 $toiletdetails->ward=$request->toilet_ward;
@@ -108,15 +111,42 @@ class ToiletController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show()
+    public function show(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'user_lat' => 'required|min:5',
+            'user_lng' => 'required|min:5'
+            //'toilet_ward' => 'required|email|unique:login,username',
+           // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
+           // 'toilet_organisation' => 'required|min:5'
+        ]);
+        $rad=0;
+        if($request->rad==null)
+            $rad=1.5;//keeping default distance as 1.5 km
+        else
+            $rad=$request->rad;
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
+            return json_encode($data);
+        }
+        $user_lat=$request->user_lat;
+        $user_lng=$request->user_lng;
          //
-        $toiletdetails = ToiletRegister::all();
-        $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
-        return json_encode($data);
         // $user = JWTAuth::parseToken()->authenticate();
-        // $username=$user->username;
-        // return response()->json(compact('user'));
+        // if($user->role==3)//list toilets for admin
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        // if($user->role==2)//list toilets for moderaters
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        $toiletdetails=DB::select('SELECT id,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM toilets HAVING distance < :rad',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
+        return json_encode($toiletdetails);
     }
 
     /**
