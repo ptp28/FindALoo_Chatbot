@@ -19,6 +19,8 @@ use App\Models\Logins;
 use App\Models\ToiletRegister;
 use App\Models\UserRegister;
 use App\Models\ToiletImages;
+use App\Models\ToiletFeedback;
+use App\Models\ToiletVisits;
 //image
 use Image;
 use File;
@@ -183,7 +185,7 @@ class ToiletController extends Controller
         // }
         $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
         $toiletdetails=$toiletdetails[0];
-        $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+        $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
         return json_encode($data);
     }
 
@@ -197,7 +199,60 @@ class ToiletController extends Controller
     {
         //
     }
+    /**
+     * API for entering feedback for specific toilet
+     *
+     * @param  int  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addFeedback(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required',
+            'toilet_cleanliness' => 'required',
+            'toilet_maintenance' => 'required',
+            'toilet_ambience' => 'required'
 
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete form");
+            return json_encode($data);
+        }
+        $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        $userid=6;
+        $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
+        if($checkUser==0){
+            DB::transaction(function($request) use ($request, $userid){
+            // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+            // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+            $toiletFeedback=new ToiletFeedback;
+            $toiletFeedback->user_id=$userid;
+            $toiletFeedback->toilet_id=$request->toilet_id;
+            $toiletFeedback->cleanliness=$request->toilet_cleanliness;
+            $toiletFeedback->maintenance=$request->toilet_maintenance;
+            $toiletFeedback->ambience=$request->toilet_ambience;
+            if($request->toilet_comment!=null)
+                $toiletFeedback->comment=$request->toilet_comment;
+            $toiletFeedback->save();
+            //$toilet_id=$request->toilet_id;
+            $toiletdetails=DB::select('SELECT AVG(cleanliness) c, AVG(maintenance) m, AVG(ambience) a FROM toilet_feedback where toilet_id=:toilet_id',['toilet_id'=>$request->toilet_id]);
+            $toiletdetails=$toiletdetails[0];
+            $ratings=ToiletRegister::where('id',$request->toilet_id)->first();
+            $ratings->cleanliness=$toiletdetails->c;
+            $ratings->maintenance=$toiletdetails->m;
+            $ratings->ambience=$toiletdetails->a;
+            $ratings->save();
+            });//transaction ends here
+
+            $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+            return json_encode($data);
+        }
+        $data=array("status"=>"fail","data"=>null, "message"=>"Multiple feedbacks not allowed");
+        return json_encode($data);
+        
+
+    }
     /**
      * photo upload for Toilets
      *

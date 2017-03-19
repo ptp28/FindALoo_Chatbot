@@ -57,6 +57,17 @@ Route::POST('register/addToilet',[
 Route::GET('/showToilets',[
 	//'middleware' => 'jwt-auth',
 	'as' => 'showToilets',
+	'uses' => 'ToiletController@showSpecificToilet'
+]);
+
+Route::GET('/addFeedback',[
+	'middleware' => 'jwt-auth',
+	'as' => 'addFeedback',
+	'uses' => 'ToiletController@addFeedback'
+]);
+Route::GET('/showSpcfcToilets',[
+	//'middleware' => 'jwt-auth',
+	'as' => 'showSpcfcToilets',
 	'uses' => 'ToiletController@show'
 ]);
 //image upload for toilets
