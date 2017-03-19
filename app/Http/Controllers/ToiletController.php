@@ -108,7 +108,7 @@ class ToiletController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  Request $request
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request)
@@ -116,19 +116,16 @@ class ToiletController extends Controller
         $validator = Validator::make($request->all(), [
             'user_lat' => 'required|min:5',
             'user_lng' => 'required|min:5'
-            //'toilet_ward' => 'required|email|unique:login,username',
-           // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
-           // 'toilet_organisation' => 'required|min:5'
         ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
+            return json_encode($data);
+        }
         $rad=0;
         if($request->rad==null)
             $rad=1.5;//keeping default distance as 1.5 km
         else
             $rad=$request->rad;
-        if ($validator->fails()) {
-            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
-            return json_encode($data);
-        }
         $user_lat=$request->user_lat;
         $user_lng=$request->user_lng;
          //
@@ -146,7 +143,48 @@ class ToiletController extends Controller
         //     // return json_encode($data);
         // }
         $toiletdetails=DB::select('SELECT id,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM toilets HAVING distance < :rad',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
-        return json_encode($toiletdetails);
+        if(sizeof($toiletdetails)>0)
+        {
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+            return json_encode($data);
+        }
+        $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+        return json_encode($data);
+    }
+
+    /**
+     * Display the specific toilet.
+     *
+     * @param  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function showSpecificToilet(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
+            return json_encode($data);
+        }
+         //
+        // $user = JWTAuth::parseToken()->authenticate();
+        // if($user->role==3)//list toilets for admin
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        // if($user->role==2)//list toilets for moderaters
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
+        $toiletdetails=$toiletdetails[0];
+        $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+        return json_encode($data);
     }
 
     /**
