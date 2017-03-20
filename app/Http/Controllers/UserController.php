@@ -178,7 +178,7 @@ class UserController extends Controller
             $data=array("status"=>"error","data"=>null, "message"=>"Empty token passed");
             return response()->json($data);
         }
-        $user=Logins::where(['verfiy_token'=>$token,'active',-2])->first();
+        $user=Logins::where(['verify_token'=>$token,'active',-2])->first();
         if($user){
             $data=array("status"=>"fail","data"=>null, "message"=>"User not found/Wrong token");
             return response()->json($data);
