@@ -9,6 +9,7 @@ use App\Models\Logins;
 use Validator;
 // use Illuminate\Http\Request;
 use Auth;
+use Mail;
 use DateTime;
 use Illuminate\Http\Request;
 use App\Http\Requests;
@@ -71,12 +72,75 @@ class AuthenticateController extends Controller
         // return view('register/login')->with('notice', $data);
         return view('register/login');
     }
-    
+
     public function logout(){
         // $data = Notice::all();
         // return view('register/login')->with('notice', $data);
         return json_encode(JWTAuth::getToken());
         JWTAuth::invalidate(JWTAuth::getToken());
+    }
+
+    //forgetpassword
+    public function forgotpassProcess(Request $request){
+        $validator = Validator::make($request->all(), [
+            'username' => 'required|email',
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Input a valid email id");
+            return json_encode($data);
+        }
+        $username=$request->username;
+        $user=Logins::where('username',$username)->first();
+        if(!$user){
+            $data=array("status"=>"fail","data"=>null, "message"=>"$username is not registered with us");
+            return json_encode($data);
+        }
+        if($user->active == -2){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Your e-mail is yet to be verify by clicking on the 'Activate' button in the Registration email sent by FindaLoo");
+            return json_encode($data);
+        }
+        //email verification completed, now prepare for sending an email with token
+        /* Generate token and store in DB */
+        $token = '';
+        if($user->token != '' && !empty($user->token)){
+            $token = $user->token;
+        } else {
+            $token = md5(str_random(50));
+            $user->token = $token;
+            $user->active = 0;
+
+            if(!$user->save()){
+                $data=array("status"=>"error","data"=>null, "message"=>"Unable to save the information. Please contact us at admin@e-yantra.org via email about the issue");
+                return json_encode($data);
+            }
+        }
+        Mail::queue('email.forgotPass', ['email' => $username, 'token' => $token], function($message) use ($username)
+        {
+            
+            $message
+            ->to($username)
+            ->cc('admin@e-yantra.org')
+            ->subject('Forgot Password: FindaLoo')
+            ->from('admin@e-yantra.org', 'e-Yantra IITB');
+        });
+
+    }
+
+    //Verify the password token
+    public function verifyPassToken($username, $token) {
+        /* Validate username and token */
+        $userrecord = Logins::where(['username'=>$username, 'token'=>$token])->first();
+        if(!$userrecord || ($userrecord->token != $token)) {
+            // Redirect to login page with error message.
+            $data=array("status"=>"error","data"=>null, "message"=>"Unable to set new password. Please contact us at admin@e-yantra.org via email about the issue");
+            return json_encode($data);
+        }
+        $newpassword = str_random(8);
+        $userrecord->password=Hash::make($newpassword);
+        $userrecord->save();
+        $credentials=array("username"=>$username,"password"=>$newpassword);
+        $data=array("status"=>"success","data"=>$credentials, "message"=>"New password allotted");
+        return json_encode($data);
     }
 
     //get user from the token

@@ -36,11 +36,14 @@ Route::GET('/logout',[
 	'uses' => 'Auth\AuthenticateController@logout'
 ]);
 
-Route::any('register/forgotpass',[
-	'as' => 'forgotpass',
-	function(){
-		return view('register/forgotpass');
-	}
+Route::GET('auth/forgotPass',[
+	'as' => 'forgotPass',
+	'uses' => 'Auth\AuthenticateController@forgotpassProcess'
+]);
+
+Route::GET('auth/verify_pass/{username}/{token}',[
+	'as' => 'verifyPassToken',
+	'uses' => 'Auth\AuthenticateController@verifyPassToken'
 ]);
 
 Route::GET('/verifyAccount/{token}',[
