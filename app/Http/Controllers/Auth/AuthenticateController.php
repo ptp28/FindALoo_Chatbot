@@ -114,7 +114,7 @@ class AuthenticateController extends Controller
                 return json_encode($data);
             }
         }
-        Mail::queue('email.forgotPass', ['email' => $username, 'token' => $token], function($message) use ($username)
+        Mail::queue('email.forgotPass', ['username' => $username, 'token' => $token], function($message) use ($username)
         {
             
             $message
