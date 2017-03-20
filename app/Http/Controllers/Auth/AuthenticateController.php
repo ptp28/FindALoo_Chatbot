@@ -139,6 +139,7 @@ class AuthenticateController extends Controller
         $newpassword = str_random(8);
         $userrecord->password=Hash::make($newpassword);
         $userrecord->change_count=$userrecord->change_count+1;
+        $userrecord->token=null;
         $userrecord->save();
         $credentials=array("username"=>$username,"password"=>$newpassword);
         Mail::queue('email.newPass', ['username' => $username, 'newpassword' => $newpassword], function($message) use ($username)

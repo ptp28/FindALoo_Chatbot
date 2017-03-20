@@ -12,7 +12,6 @@
             <h3>Greetings from FindaLoo!!</h3>
             <p>Recently you tried to reset your password using our app. New password has been generated for you.</p>
 
-            <p><b>Click the below button to reset your password.</b></p>
             <h4>Here are your login credentials:</h4>
             <table>
               <tr>
