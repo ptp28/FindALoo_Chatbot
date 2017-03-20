@@ -179,7 +179,7 @@ class UserController extends Controller
             return response()->json($data);
         }
         $user=Logins::where(['verify_token'=>$token,'active'=>-2])->first();
-        if($user){
+        if(!$user){
             $data=array("status"=>"fail","data"=>null, "message"=>"User not found/Wrong token");
             return response()->json($data);
         }
