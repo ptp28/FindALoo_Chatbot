@@ -50,6 +50,13 @@ Route::GET('/verifyAccount/{token}',[
 	'as' => 'verifyEmail',
 	'uses' => 'UserController@verify_account'
 ]);
+//normal password changing
+Route::GET('auth/changePass',[
+	'middleware' => 'jwt-auth',
+	'as' => 'changePass',
+	'uses' => 'Auth\AuthenticateController@changePass'
+]);
+
 
 /*Route::POST('auth/getAuthenticatedUser',[
 	'middleware' => 'jwt-auth',

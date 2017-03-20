@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use JWTAuth;
 use Tymon\JWTAuthExceptions\JWTException;
 use Hash;
+use DB;
 class AuthenticateController extends Controller
 {
     public function authenticate(Request $request)
@@ -152,6 +153,43 @@ class AuthenticateController extends Controller
             ->from('admin@e-yantra.org', 'e-Yantra IITB');
         });
         $data=array("status"=>"success","data"=>$credentials, "message"=>"New password allotted and a confirmation mail has been also sent");
+        return json_encode($data);
+    }
+    //for normal changing of password
+    public function changePass(Request $request){
+        $validator = Validator::make($request->all(), [
+            'newPassword' => 'required|min:5',
+            'repeatPassword' => 'required|min:5'
+        ]);
+        if ($validator->fails()){
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Password change failed");
+            return json_encode($data);
+        }
+        $newpassword = $request->newPassword;
+        $repeatpassword = $request->repeatPassword;
+        if ($newpassword != $repeatpassword){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Password, Confirm Password doesn\'t match.");
+            return json_encode($data);
+        }
+        DB::transaction(function($request) use ($request,$newpassword, $repeatpassword ){
+            $username=Auth::user()->username;
+            $userrecord = Logins::where('username', Auth::user()->username)->first();
+            $userrecord->password = Hash::make($newpassword);
+            $userrecord->token = null;
+            $userrecord->active = 1;
+            $userrecord->change_count = $userrecord->change_count + 1;
+            $userrecord->save();
+            Mail::queue('email.newPass', ['username' => $username, 'newpassword' => $newpassword], function($message) use ($username)
+            {
+                
+                $message
+                ->to($username)
+                ->cc('admin@e-yantra.org')
+                ->subject('New Password: FindaLoo')
+                ->from('admin@e-yantra.org', 'e-Yantra IITB');
+            });
+        });
+        $data=array("status"=>"success","data"=>null, "message"=>"New password saved");
         return json_encode($data);
     }
 

@@ -132,7 +132,7 @@ return [
 
     'to' => [
     'address' => 'jayantjnp@gmail.com',
-    'name' => 'Jayant'
+    'name' => 'Sajal'
 ],
 
 ];
