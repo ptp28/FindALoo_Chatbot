@@ -131,7 +131,7 @@ return [
     */
 
     'to' => [
-    'address' => 'jayantjnp@gmail.com',
+    'address' => 'sajalnarang@gmail.com',
     'name' => 'Sajal'
 ],
 

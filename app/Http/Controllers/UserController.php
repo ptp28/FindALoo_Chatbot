@@ -88,7 +88,7 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->cc('admin@e-yantra.org')
+                ->cc('jayantjnp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });

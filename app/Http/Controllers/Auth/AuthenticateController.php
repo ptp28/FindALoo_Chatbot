@@ -119,7 +119,7 @@ class AuthenticateController extends Controller
             
             $message
             ->to($username)
-            ->cc('admin@e-yantra.org')
+            ->cc('jayantjnp@gmail.com')
             ->subject('Forgot Password: FindaLoo')
             ->from('admin@e-yantra.org', 'e-Yantra IITB');
         });
@@ -148,7 +148,7 @@ class AuthenticateController extends Controller
             
             $message
             ->to($username)
-            ->cc('admin@e-yantra.org')
+            ->cc('jayantjnp@gmail.com')
             ->subject('New Password: FindaLoo')
             ->from('admin@e-yantra.org', 'e-Yantra IITB');
         });
@@ -184,7 +184,7 @@ class AuthenticateController extends Controller
                 
                 $message
                 ->to($username)
-                ->cc('admin@e-yantra.org')
+                ->cc('jayantjnp@gmail.com')
                 ->subject('New Password: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });
