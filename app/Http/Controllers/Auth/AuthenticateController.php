@@ -17,7 +17,7 @@ use App\Http\Controllers\Controller;
 use JWTAuth;
 use Tymon\JWTAuthExceptions\JWTException;
 use \Tymon\JWTAuth\Middleware\GetUserFromToken;
-
+use Hash;
 class AuthenticateController extends Controller
 {
     public function authenticate(Request $request)
@@ -123,6 +123,8 @@ class AuthenticateController extends Controller
             ->subject('Forgot Password: FindaLoo')
             ->from('admin@e-yantra.org', 'e-Yantra IITB');
         });
+        $data=array("status"=>"success","data"=>null, "message"=>"Link for confirming new password has been sent on your email");
+        return json_encode($data);
 
     }
 
@@ -139,7 +141,16 @@ class AuthenticateController extends Controller
         $userrecord->password=Hash::make($newpassword);
         $userrecord->save();
         $credentials=array("username"=>$username,"password"=>$newpassword);
-        $data=array("status"=>"success","data"=>$credentials, "message"=>"New password allotted");
+        Mail::queue('email.newPass', ['username' => $username, 'password' => $newpassword], function($message) use ($username)
+        {
+            
+            $message
+            ->to($username)
+            ->cc('admin@e-yantra.org')
+            ->subject('New Password: FindaLoo')
+            ->from('admin@e-yantra.org', 'e-Yantra IITB');
+        });
+        $data=array("status"=>"success","data"=>$credentials, "message"=>"New password allotted and a confirmation mail has been also sent");
         return json_encode($data);
     }
 
