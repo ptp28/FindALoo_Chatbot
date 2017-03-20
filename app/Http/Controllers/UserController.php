@@ -186,6 +186,8 @@ class UserController extends Controller
         $user->active=1;
         $user->verify_token=null;
         $user->save();
+        $data=array("status"=>"success","data"=>null, "message"=>"Email verified. You can login now");
+        return response()->json($data);
     }
 
     /**
