@@ -16,7 +16,6 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use JWTAuth;
 use Tymon\JWTAuthExceptions\JWTException;
-use \Tymon\JWTAuth\Middleware\GetUserFromToken;
 use Hash;
 class AuthenticateController extends Controller
 {
@@ -141,7 +140,7 @@ class AuthenticateController extends Controller
         $userrecord->password=Hash::make($newpassword);
         $userrecord->save();
         $credentials=array("username"=>$username,"password"=>$newpassword);
-        Mail::queue('email.newPass', ['username' => $username, 'password' => $newpassword], function($message) use ($username)
+        Mail::queue('email.newPass', ['username' => $username, 'newpassword' => $newpassword], function($message) use ($username)
         {
             
             $message
