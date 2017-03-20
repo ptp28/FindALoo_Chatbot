@@ -8,7 +8,7 @@
       <table>
         <tr>
           <td style="text-align: justify;">
-            <p>Dear {{$name}},</p>
+            <p>Dear {!!$name!!},</p>
             <h3>Greetings from FindaLoo!!</h3>
             <p>Welcome and Thank you!!!<br/> You have successfully created your account.</p>
             <p>Your next step is activating your account, which is an integral part of the registration process; instructions below provide step-by-step guidance to help you to complete the team registration.</p>
