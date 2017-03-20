@@ -35,12 +35,25 @@ Route::GET('/logout',[
 	'as' => 'logout',
 	'uses' => 'Auth\AuthenticateController@logout'
 ]);
+
 Route::any('register/forgotpass',[
 	'as' => 'forgotpass',
 	function(){
 		return view('register/forgotpass');
 	}
 ]);
+
+Route::GET('/verifyAccount/{token}',[
+	'as' => 'verifyEmail',
+	'uses' => 'UserController@verify_account'
+]);
+
+/*Route::POST('auth/getAuthenticatedUser',[
+	'middleware' => 'jwt-auth',
+	'as' => 'getAuthenticatedUser',
+	'uses' => 'Auth\AuthenticateController@getAuthenticatedUser'
+]);
+*/
 
 Route::get('/showUser',[
 	'middleware' => 'jwt-auth',

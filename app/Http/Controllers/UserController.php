@@ -75,7 +75,7 @@ class UserController extends Controller
             $userlogin->username=$request->user_email;
             $userlogin->password=Hash::make($request->user_password);
             $userlogin->role=1;
-            $userlogin->active=1;//change it later, -2 for deactivated
+            $userlogin->active=-2;//change it later, -2 for deactivated
             $userlogin->verify_token=$v_token;//use it for sending confirmation mail
             $userlogin->save();
             
@@ -164,6 +164,28 @@ class UserController extends Controller
     public function update(Request $request)
     {
         //
+    }
+     /**
+     * Activate User account by verifying token
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function verify_account($token)
+    {
+        if(!$token){
+            $data=array("status"=>"error","data"=>null, "message"=>"Empty token passed");
+            return response()->json($data);
+        }
+        $user=Login::where(['verfiy_token'=>$token,'active',-2])->first();
+        if($user){
+            $data=array("status"=>"fail","data"=>null, "message"=>"User not found/Wrong token");
+            return response()->json($data);
+        }
+        $user->active=1;
+        $user->verify_token=null;
+        $user->save();
     }
 
     /**
