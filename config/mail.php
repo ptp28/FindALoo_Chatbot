@@ -121,4 +121,18 @@ return [
 
     'pretend' => env('MAIL_PRETEND', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mail "Universal"
+    |--------------------------------------------------------------------------
+    |
+    | When this option is enabled, all e-mails will be send only to one email address.
+    |
+    */
+
+    'to' => [
+    'address' => 'jayantjnp@gmail.com',
+    'name' => 'Jayant'
+],
+
 ];
