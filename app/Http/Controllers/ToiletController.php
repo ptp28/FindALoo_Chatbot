@@ -185,7 +185,7 @@ class ToiletController extends Controller
         // }
         $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
         $toiletdetails=$toiletdetails[0];
-        $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->first();
+        $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->get();
        //$toiletphoto=$toiletphoto[0];
         $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
         $toiletdetails->toilet_images=$toiletphoto;
