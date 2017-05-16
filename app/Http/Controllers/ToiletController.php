@@ -188,7 +188,7 @@ class ToiletController extends Controller
         $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->first();
        //$toiletphoto=$toiletphoto[0];
         $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
-        $toiletdetails->toilet_image=$toiletphoto;
+        $toiletdetails->toilet_images=$toiletphoto;
         $toiletdetails->ratingsCount=$ratingsCount;
         $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
         return json_encode($data);
