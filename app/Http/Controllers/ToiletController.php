@@ -21,6 +21,7 @@ use App\Models\UserRegister;
 use App\Models\ToiletImages;
 use App\Models\ToiletFeedback;
 use App\Models\ToiletVisits;
+use App\Models\MSDPToiletRegister;
 //image
 use Image;
 use File;
@@ -113,7 +114,7 @@ class ToiletController extends Controller
      * @param  Request $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
+    public function showOld(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'user_lat' => 'required|min:5',
@@ -154,7 +155,99 @@ class ToiletController extends Controller
         return json_encode($data);
     }
 
+/**
+     * Display the specified resource.
+     *
+     * @param  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_lat' => 'required|min:5',
+            'user_lng' => 'required|min:5'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
+            return json_encode($data);
+        }
+        $rad=0;
+        if($request->rad==null)
+            $rad=1.5;//keeping default distance as 1.5 km
+        else
+            $rad=$request->rad;
+        $user_lat=$request->user_lat;
+        $user_lng=$request->user_lng;
+         //
+        // $user = JWTAuth::parseToken()->authenticate();
+        // if($user->role==3)//list toilets for admin
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        // if($user->role==2)//list toilets for moderaters
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        $toiletdetails=DB::select('SELECT OBJECTID,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM MSDPUSERToilet_Block HAVING distance < :rad',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
+        if(sizeof($toiletdetails)>0)
+        {
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+            return json_encode($data);
+        }
+        $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+        return json_encode($data);
+    }
+
     /**
+     * Display the specific toilet IIT.
+     *
+     * @param  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function showSpecificToiletOld(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
+            return json_encode($data);
+        }
+         //
+        // $user = JWTAuth::parseToken()->authenticate();
+        // if($user->role==3)//list toilets for admin
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        // if($user->role==2)//list toilets for moderaters
+        // {
+        //     // $toiletdetails = ToiletRegister::all();
+        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
+        //     // return json_encode($data);
+        // }
+        $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
+        if(sizeof($toiletdetails)>0)
+        {
+            $toiletdetails=$toiletdetails[0];
+            $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->first();
+           //$toiletphoto=$toiletphoto[0];
+            $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
+            $toiletdetails->toilet_image=$toiletphoto;
+            $toiletdetails->ratingsCount=$ratingsCount;
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
+        }
+        else
+            $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
+        return json_encode($data);
+    }
+
+        /**
      * Display the specific toilet.
      *
      * @param  Request $request
@@ -183,14 +276,20 @@ class ToiletController extends Controller
         //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
         //     // return json_encode($data);
         // }
-        $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
-        $toiletdetails=$toiletdetails[0];
-        $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->first();
-       //$toiletphoto=$toiletphoto[0];
-        $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
-        $toiletdetails->toilet_image=$toiletphoto;
-        $toiletdetails->ratingsCount=$ratingsCount;
-        $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
+        $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->select('OBJECTID','lat','lng','wardheader','address','ORGNAME','ownership','countms','countfs','condition','cleanliness','maintenance' ,'ambience','water','SURVEYEDDA')->get();
+        if(sizeof($toiletdetails)>0)
+        {
+            $toiletdetails=$toiletdetails[0];
+            $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->first();
+           //$toiletphoto=$toiletphoto[0];
+            $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
+            $toiletdetails->toilet_image=$toiletphoto;
+            $toiletdetails->ratingsCount=$ratingsCount;
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
+        }
+        else
+            $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
+
         return json_encode($data);
     }
 

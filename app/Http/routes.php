@@ -83,10 +83,21 @@ Route::GET('/showToilets',[
 	'uses' => 'ToiletController@show'
 ]);
 
+Route::GET('/showToiletsIIT',[
+	//'middleware' => 'jwt-auth',
+	'as' => 'showToiletsIIT',
+	'uses' => 'ToiletController@showOld'
+]);
+
 Route::GET('/addFeedback',[
 	'middleware' => 'jwt-auth',
 	'as' => 'addFeedback',
 	'uses' => 'ToiletController@addFeedback'
+]);
+Route::GET('/showSpcfcToiletsIIT',[
+	//'middleware' => 'jwt-auth',
+	'as' => 'showSpcfcToiletsIIT',
+	'uses' => 'ToiletController@showSpecificToiletOld'
 ]);
 Route::GET('/showSpcfcToilets',[
 	//'middleware' => 'jwt-auth',
