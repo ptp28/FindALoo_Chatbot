@@ -289,7 +289,6 @@ class ToiletController extends Controller
         }
         else
             $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
-
         return json_encode($data);
     }
 
