@@ -83,6 +83,12 @@ Route::GET('/showToilets',[
 	'uses' => 'ToiletController@show'
 ]);
 
+Route::GET('/toiletSOS',[
+	//'middleware' => 'jwt-auth',
+	'as' => 'toiletSOS',
+	'uses' => 'ToiletController@showSOS'
+]);
+
 Route::GET('/showToiletsIIT',[
 	//'middleware' => 'jwt-auth',
 	'as' => 'showToiletsIIT',
@@ -93,6 +99,11 @@ Route::GET('/addFeedback',[
 	'middleware' => 'jwt-auth',
 	'as' => 'addFeedback',
 	'uses' => 'ToiletController@addFeedback'
+]);
+Route::GET('/showVisits',[
+	'middleware' => 'jwt-auth',
+	'as' => 'showVisits',
+	'uses' => 'ToiletController@showVisitHistory'
 ]);
 Route::GET('/addHistory',[
 	'middleware' => 'jwt-auth',

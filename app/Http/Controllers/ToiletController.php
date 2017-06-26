@@ -247,6 +247,39 @@ class ToiletController extends Controller
         return json_encode($data);
     }
 
+    /**
+     * Display the SOS toilet.
+     *
+     * @param  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function showSOS(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_lat' => 'required|min:5',
+            'user_lng' => 'required|min:5'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Location coordinates missing");
+            return json_encode($data);
+        }
+        $rad=0;
+        if($request->rad==null)
+            $rad=20;//keeping default distance as 1.5 km
+        else
+            $rad=$request->rad;
+        $user_lat=$request->user_lat;
+        $user_lng=$request->user_lng;
+        $toiletdetails=DB::select('SELECT OBJECTID,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM MSDPUSERToilet_Block HAVING distance < :rad order by distance asc limit 1',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
+        if(sizeof($toiletdetails)>0)
+        {
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+            return json_encode($data);
+        }
+        $data=array("status"=>"fail","data"=>null, "message"=>"No closest toilet found in your area in the radius of ".$rad." kms");
+        return json_encode($data);
+    }
+
         /**
      * Display the specific toilet.
      *
@@ -333,8 +366,25 @@ class ToiletController extends Controller
         }
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
         return json_encode($data);
-        
+    }
 
+      /**
+     * for fetching all the toilets visited by the user
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function showVisitHistory()
+    {
+        $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        $visits = ToiletVisits::where(['user_id'=>$userid])->get();
+        if(sizeof($visits)>0){
+            $data=array("status"=>"success","data"=>$visits, "message"=>"Visits fetched");
+        }
+        else
+            $data=array("status"=>"success","data"=>null, "message"=>"No visit history found");
+        return json_encode($data);
     }
 
     /**
