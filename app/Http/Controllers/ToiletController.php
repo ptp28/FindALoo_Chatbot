@@ -408,9 +408,8 @@ class ToiletController extends Controller
         $validator = Validator::make($request->all(), [
             'toilet_id' => 'required',
             'toilet_cleanliness' => 'required|numeric|min:1|max:5',
-            'toilet_maintenance' => 'required',
-            'toilet_ambience' => 'required'
-
+            'toilet_maintenance' => 'required|numeric|min:1|max:5',
+            'toilet_ambience' => 'required|numeric|min:1|max:5'
         ]);
         if ($validator->fails()) {
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete feedback data");
@@ -422,25 +421,50 @@ class ToiletController extends Controller
         $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
         // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             // return $toiletdetails;
-        if($checkUser==0){//user rediting feature has to be added
-            DB::transaction(function($request) use ($request, $userid){
-            // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
-            // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-            $toiletFeedback=new ToiletFeedback;
-            $toiletFeedback->user_id=$userid;
-            $toiletFeedback->toilet_id=$request->toilet_id;
-            $toiletFeedback->cleanliness=$request->toilet_cleanliness;
-            $toiletFeedback->maintenance=$request->toilet_maintenance;
-            $toiletFeedback->ambience=$request->toilet_ambience;
-            if($request->toilet_comment!=null)
-                $toiletFeedback->comment=$request->toilet_comment;
-            $toiletFeedback->save();
+        
+        DB::transaction(function($request) use ($request, $userid, $checkUser){
+        // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+            $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+            if($checkUser==0){//for the first time
+                $toiletFeedback=new ToiletFeedback;
+                $toiletFeedback->user_id=$userid;
+                $toiletFeedback->toilet_id=$request->toilet_id;
+                $toiletFeedback->cleanliness=$request->toilet_cleanliness;
+                $toiletFeedback->maintenance=$request->toilet_maintenance;
+                $toiletFeedback->ambience=$request->toilet_ambience;
+                if($request->toilet_comment!=null)
+                    $toiletFeedback->comment=$request->toilet_comment;
+                $toiletFeedback->save();
+                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
+                //$ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+                $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount+$request->toilet_cleanliness)/($feedbackCount+1);
+                $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount+$request->toilet_maintenance)/($feedbackCount+1);
+                $ratings->AMBIENCE=($ratings->AMBIENCE*$feedbackCount+$request->toilet_ambience)/($feedbackCount+1);
+                //}
+                $ratings->CONDITION_RAW=($ratings->CLEANLINESS+$ratings->MAINTENANCE+$ratings->AMBIENCE)/3;//overall rating is average all three subratings
+            }
+            else{//rediting the old feedback
+                $toiletFeedback=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->first();//get previous rating from the user
+
+                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count()+1;//finding the count of feedbacks
+                $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount-$toiletFeedback->cleanliness+$request->toilet_cleanliness)/($feedbackCount);//readjusting the average
+                $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount-$toiletFeedback->maintenance+$request->toilet_maintenance)/($feedbackCount);
+                $ratings->AMBIENCE=($ratings->AMBIENCE*$feedbackCount-$toiletFeedback->ambience+$request->toilet_ambience)/($feedbackCount);
+                $ratings->CONDITION_RAW=($ratings->CLEANLINESS+$ratings->MAINTENANCE+$ratings->AMBIENCE)/3;//overall rating is 
+                
+                $toiletFeedback->cleanliness=$request->toilet_cleanliness;
+                $toiletFeedback->maintenance=$request->toilet_maintenance;
+                $toiletFeedback->ambience=$request->toilet_ambience;
+                if($request->toilet_comment!=null)
+                    $toiletFeedback->comment=$request->toilet_comment;
+                $toiletFeedback->save();
+
+            }
             //$toilet_id=$request->toilet_id;
-            $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();//finding the count of feedbacks
             //return $toiletdetails;
             //$toiletdetails=DB::select('SELECT AVG(cleanliness) c, AVG(maintenance) m, AVG(ambience) a FROM toilet_feedback where toilet_id=:toilet_id',['toilet_id'=>$request->toilet_id]);
             //$toiletdetails=$toiletdetails[0];
-            $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
             //updating the rating of the toilet
             //if no feedback before, multiply old rating with one add new and divde it by two
             //if previous feedbacks are their, find their counts, multiply it with old rating, add new, diidfe by count+1
@@ -451,11 +475,8 @@ class ToiletController extends Controller
             // }
             // else{
             //Log::info($ratings);
-            $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount+$request->toilet_cleanliness)/($feedbackCount+1);
-            $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount+$request->toilet_maintenance)/($feedbackCount+1);
-            $ratings->AMBIENCE=($ratings->AMBIENCE*$feedbackCount+$request->toilet_ambience)/($feedbackCount+1);
             //}
-            $ratings->CONDITION_RAW=($ratings->CLEANLINESS+$ratings->MAINTENANCE+$ratings->AMBIENCE)/3;//overall rating is average all three subratings
+            //average all three subratings
             if($ratings->CONDITION_RAW<=2.33 && $ratings->CONDITION_RAW>=1)
                 $ratings->CONDITION='Poor';
             else if($ratings->CONDITION_RAW>2.33 && $ratings->CONDITION_RAW<=3.66)
@@ -463,14 +484,11 @@ class ToiletController extends Controller
             else
                 $ratings->CONDITION='Good';
             $ratings->save();
-            });//transaction ends here
-            $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
-            return json_encode($data);
-        }
-        $data=array("status"=>"fail","data"=>null, "message"=>"Multiple feedbacks not allowed");
+        });//transaction ends here
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
         return json_encode($data);
-        
-
+        // $data=array("status"=>"fail","data"=>null, "message"=>"Multiple feedbacks not allowed");
+        // return json_encode($data);
     }
     /**
      * photo upload for Toilets
