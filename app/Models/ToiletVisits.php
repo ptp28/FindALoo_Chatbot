@@ -10,7 +10,7 @@ class ToiletVisits extends Model{
      *
      * @var string
      */
-    protected $table = 'toilet_visits';
+    protected $table = 'Toilet_Visits';
 
     
 }

@@ -94,6 +94,11 @@ Route::GET('/addFeedback',[
 	'as' => 'addFeedback',
 	'uses' => 'ToiletController@addFeedback'
 ]);
+Route::GET('/addHistory',[
+	'middleware' => 'jwt-auth',
+	'as' => 'addHistory',
+	'uses' => 'ToiletController@addHistory'
+]);
 Route::GET('/showSpcfcToiletsIIT',[
 	//'middleware' => 'jwt-auth',
 	'as' => 'showSpcfcToiletsIIT',

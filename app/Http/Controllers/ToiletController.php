@@ -291,6 +291,51 @@ class ToiletController extends Controller
             $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
         return json_encode($data);
     }
+    /**
+     * API for creating visiting history for user for each toilet
+     *
+     * @param  int  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addHistory(Request $request)//for registered user
+    {
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+            //'toilet_cleanliness' => 'required|numeric|min:1|max:5',
+            //'toilet_maintenance' => 'required',
+            //'toilet_ambience' => 'required'
+
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"No toilet id passed");
+            return json_encode($data);
+        }
+        $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+
+        //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
+        try{
+            $exception=DB::transaction(function($request) use ($request, $userid){
+                $toiletvisit=new ToiletVisits;
+                $toiletvisit->user_id=$userid;
+                $toiletvisit->toilet_id=$request->toilet_id;
+                // if($request->toilet_comment!=null)
+                    // $toiletFeedback->comment=$request->toilet_comment;
+                $toiletvisit->save();
+            });//transaction ends here
+            if(is_null($exception)){
+                $data=array("status"=>"success","data"=>null, "message"=>"Visit entry added");
+            }
+
+        }
+        catch(Exception $e){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
+        }
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+        return json_encode($data);
+        
+
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -303,7 +348,7 @@ class ToiletController extends Controller
         //
     }
     /**
-     * API for entering feedback for specific toilet
+     * API for entering/updating feedback for specific toilet
      *
      * @param  int  Request $request
      * @return \Illuminate\Http\Response
