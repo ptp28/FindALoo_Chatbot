@@ -198,7 +198,7 @@ class ToiletController extends Controller
         //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
         //     // return json_encode($data);
         // }
-        $toiletdetails=DB::select('SELECT OBJECTID,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM MSDPUSERToilet_Block HAVING distance < :rad ',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
+        $toiletdetails=DB::select('SELECT OBJECTID,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM MSDPUSERToilet_Block HAVING distance < :rad order by distance asc limit 25',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
         if(sizeof($toiletdetails)>0)
         {
             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
