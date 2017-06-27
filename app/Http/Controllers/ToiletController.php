@@ -395,7 +395,7 @@ class ToiletController extends Controller
             $data=array("status"=>"success","data"=>$visits, "message"=>"Visits fetched");
         }
         else
-            $data=array("status"=>"success","data"=>null, "message"=>"No visit history found");
+            $data=array("status"=>"fail","data"=>null, "message"=>"No visit history found");
         return json_encode($data);
     }
 
@@ -430,14 +430,19 @@ class ToiletController extends Controller
         $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
+        $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+        if(sizeof($ratings)==0){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
+            return json_encode($data);
+        }
         $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
         // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             // return $toiletdetails;
         
-        DB::transaction(function($request) use ($request, $userid, $checkUser){
+        DB::transaction(function($request) use ($request, $userid, $checkUser, $ratings){
         // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-            $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+            
             if($checkUser==0){//for the first time
                 $toiletFeedback=new ToiletFeedback;
                 $toiletFeedback->user_id=$userid;
