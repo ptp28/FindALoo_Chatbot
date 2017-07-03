@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 // use App\Http\Controllers\Controller;
 // use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\Logins;
+use App\Models\UserRegister;
 use Validator;
 // use Illuminate\Http\Request;
 use Auth;
@@ -63,8 +64,14 @@ class AuthenticateController extends Controller
         $logincount->login_count=$logincount->login_count+1;
         $logincount->last_login=new DateTime;
         $logincount->save();
-        $data=array("status"=>"success","data"=>$token, "message"=>"Successfully logged in");
-        return response()->json($data);
+        $userdetails=UserRegister::where(['email'=>$request->email])->select('name', 'email', 'role','gender')->first();//
+        $userdetails->token=$token;
+        //getting user_id
+        //$userRole=UserRegister::where(['email'=>$user->username])->pluck('role');//getting user role
+        $data=array("status"=>"success","data"=>$userdetails, "message"=>"Login Successful");
+        return json_encode($data);
+        // $data=array("status"=>"success","data"=>$token, "message"=>"Successfully logged in");
+        // return response()->json($data);
         // return response()->json(compact('token'));
     }
     public function login(){

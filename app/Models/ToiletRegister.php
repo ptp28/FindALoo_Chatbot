@@ -11,6 +11,7 @@ class ToiletRegister extends Model{
      * @var string
      */
     protected $table = 'toilets';
+    public $timestamps = true;
 
     
 }

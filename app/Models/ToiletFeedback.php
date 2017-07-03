@@ -11,6 +11,7 @@ class ToiletFeedback extends Model{
      * @var string
      */
     protected $table = 'toilet_feedback';
+    public $timestamps  = true;
 
     
 }
