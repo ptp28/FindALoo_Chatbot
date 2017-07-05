@@ -64,7 +64,7 @@ class AuthenticateController extends Controller
         $logincount->login_count=$logincount->login_count+1;
         $logincount->last_login=new DateTime;
         $logincount->save();
-        $userdetails=UserRegister::where(['email'=>$request->email])->select('name', 'email', 'role','gender')->first();//
+        $userdetails=UserRegister::where(['email'=>$request->email])->select('name', 'email', 'role','gender', 'age', 'contact')->first();//
         $userdetails->token=$token;
         //getting user_id
         //$userRole=UserRegister::where(['email'=>$user->username])->pluck('role');//getting user role
