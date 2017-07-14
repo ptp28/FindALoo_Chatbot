@@ -120,6 +120,12 @@ Route::GET('/showSpcfcToilets',[
 	'as' => 'showSpcfcToilets',
 	'uses' => 'ToiletController@showSpecificToilet'
 ]);
+//for reporting toilet issue
+Route::POST('/reportIssue',[
+	'middleware' => 'jwt-auth',
+	'as' => 'reportIssue',
+	'uses' => 'ToiletController@reportIssue'
+]);
 //image upload for toilets
 Route::POST('/upldToiletImage',[
 	'middleware' => 'jwt-auth',

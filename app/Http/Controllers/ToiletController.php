@@ -22,6 +22,7 @@ use App\Models\ToiletImages;
 use App\Models\ToiletFeedback;
 use App\Models\ToiletVisits;
 use App\Models\MSDPToiletRegister;
+use App\Models\ReportIssues;
 //image
 use Image;
 use File;
@@ -376,7 +377,7 @@ class ToiletController extends Controller
         catch(Exception $e){
             $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
         }
-        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+        $data=array("status"=>"success","data"=>null, "message"=>"Visit history added");
         return json_encode($data);
     }
 
@@ -396,6 +397,87 @@ class ToiletController extends Controller
         }
         else
             $data=array("status"=>"fail","data"=>null, "message"=>"No visit history found");
+        return json_encode($data);
+    }
+
+    /**
+     * API for reporting issues for each toilet
+     *
+     * @param  int  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function reportIssue(Request $request)//for registered user
+    {
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required',
+            'CLEANLINESS' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
+            'MECHANICAL' => 'required_without_all:CHOKING,CLEANLINESS,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
+            'ELECTRICAL' => 'required_without_all:CHOKING,MECHANICAL,CLEANLINESS,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
+            'PLUMBING' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,CLEANLINESS,SEWAGE,COMMENT|numeric|min:0|max:1',
+            'SEWAGE' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,CLEANLINESS,COMMENT|numeric|min:0|max:1',
+            'COMMENT' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,CLEANLINESS',
+            'toiletPht' => 'image:jpeg,bmp,png|max:3000'
+            ],
+            [
+            'required_without_all' => 'Please select atleast one option',
+            'toiletPht.image' => 'Please upload only .jpg/.png/.bmp file.',
+            'toiletPht.max' => 'Size of the file should be less than 3MB.'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Incomplete data");
+            return json_encode($data);
+        }
+        $user = JWTAuth::parseToken()->authenticate();//finding the username from the token
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+
+        //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
+        try{
+            $exception=DB::transaction(function($request) use ($request, $userid){
+                $issue=new ReportIssues;
+                $issue->user_id=$userid;
+                $issue->toilet_id=$request->toilet_id;
+                $issue->active=1;//issue is active now
+                if($request->COMMENT!=null)
+                    $issue->COMMENT=$request->COMMENT;
+                if($request->CLEANLINESS!=null)
+                    $issue->CLEANLINESS=$request->CLEANLINESS;
+                if($request->CHOKING!=null)
+                    $issue->CHOKING=$request->CHOKING;
+                if($request->MECHANICAL!=null)
+                    $issue->MECHANICAL=$request->MECHANICAL;
+                if($request->ELECTRICAL!=null)
+                    $issue->ELECTRICAL=$request->ELECTRICAL;
+                if($request->PLUMBING!=null)
+                    $issue->PLUMBING=$request->PLUMBING;
+                if($request->SEWAGE!=null)
+                    $issue->SEWAGE=$request->SEWAGE;
+                if($request->toiletPht!=null){
+                    //do image uploading here
+                    $path = public_path().'/img/toilets/';
+                    $ext = strtolower($request->file('toiletPht')->getClientOriginalExtension());
+                    $filename = str_random(15).".".$ext;
+                    $request->file('toiletPht')->move($path, $filename);
+                    $toiletPhoto=new ToiletImages;
+                    $toiletPhoto->user_id=$userid;
+                    $toiletPhoto->toilet_id=$request->toilet_id;
+                    $toiletPhoto->image_name=$filename;
+                    $toiletPhoto->active=1;
+                    $toiletPhoto->save();
+                    $issue->image_id=$toiletPhoto->id;
+                }
+                $issue->save();
+
+                //add provision for sending issue to admin
+            });//transaction ends here
+            if(is_null($exception)){
+                $data=array("status"=>"success","data"=>null, "message"=>"Issue Reported");
+            }
+
+        }
+        catch(Exception $e){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+        }
+        $data=array("status"=>"success","data"=>null, "message"=>"Issue Reported");
         return json_encode($data);
     }
 
