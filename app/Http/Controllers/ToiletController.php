@@ -57,47 +57,58 @@ class ToiletController extends Controller
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Toilet Registration failed");
             return json_encode($data);
         }
+        $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        $userRole=$user->role;//getting user role
+        if($userRole!=1 && $userRole!=2)
+        {
+            $data=array("status"=>"fail","data"=>null, "message"=>"Only Admin or Moderator can register new toilet place");
+            return json_encode($data);
+        }
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        try{
+            $exception=DB::transaction(function($request) use ($request, $userid){
+                
+                
+                
 
-        DB::transaction(function($request) use ($request){
+            // $toiletdetails=new ToiletRegister;
+            // $toiletdetails->lat=$request->toilet_lat;
+            // $toiletdetails->lng=$request->toilet_lng;
+            // $toiletdetails->user_id=$userid;
+            // if($request->toilet_ward!=null)
+            //     $toiletdetails->ward=$request->toilet_ward;
+            // if($request->toilet_address!=null)
+            //     $toiletdetails->address=$request->toilet_address;
+            // if($request->toilet_organisation!=null)
+            //     $toiletdetails->organisation=$request->toilet_organisation;
+            // if($request->toilet_ownership!=null)
+            //     $toiletdetails->ownership=$request->toilet_ownership;
+            // $toiletdetails->save();
+                $toiletdetails=new MSDPToiletRegister;
+                $toiletdetails->lat=$request->toilet_lat;
+                $toiletdetails->lng=$request->toilet_lng;
+                $toiletdetails->USERID=$userid;
+                if($request->toilet_name!=null)
+                    $toiletdetails->NAME=$request->toilet_name;
+                if($request->toilet_address!=null)
+                    $toiletdetails->ADDRESS=$request->toilet_address;
+                if($request->toilet_organisation!=null)
+                    $toiletdetails->ORGNAME=$request->toilet_organisation;
+                if($request->toilet_ownership!=null)
+                    $toiletdetails->OWNERSHIP=$request->toilet_ownership;
+                $toiletdetails->ACTIVE=0;
+                $toiletdetails->save();
 
-            //adding toilet details
-            $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
-            $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-            $userRole=UserRegister::where(['email'=>$user->username])->pluck('role');//getting user role
-            if($userRole!=1)
-            {
-                $data=array("status"=>"fail","data"=>null, "message"=>"Only Admin can enter the toilet data");
-                return json_encode($data);
-            }
+                    //add provision for sending issue to admin
+                });//transaction ends here
+                if(is_null($exception)){
+                    $data=array("status"=>"success","data"=>null, "message"=>"Toilet Added");
+                }
 
-            $toiletdetails=new ToiletRegister;
-            $toiletdetails->lat=$request->toilet_lat;
-            $toiletdetails->lng=$request->toilet_lng;
-            $toiletdetails->user_id=$userid;
-            if($request->toilet_ward!=null)
-                $toiletdetails->ward=$request->toilet_ward;
-            if($request->toilet_address!=null)
-                $toiletdetails->address=$request->toilet_address;
-            if($request->toilet_organisation!=null)
-                $toiletdetails->organisation=$request->toilet_organisation;
-            if($request->toilet_ownership!=null)
-                $toiletdetails->ownership=$request->toilet_ownership;
-            $toiletdetails->save();
-            
-
-
-            // //Send mail to user for confirmation
-            // Mail::queue('email.team_member_invite', ['email' => $request->user_email, 'token' => $v_token_mem1, 'password' => $mem1_pwd, 'name' => ucwords(strtolower($request->teamMember1_first_name)), 'team_id' => $teamId], function($message) use ($mem1_email)
-            // {
-            //     $message
-            //     ->to($mem1_email)
-            //     ->cc('admin@e-yantra.org')
-            //     ->subject('Registration: FindaLoo')
-            //     ->from('admin@e-yantra.org', 'e-Yantra IITB');
-            // });
-
-           
-        });//end of transaction
+        }
+        catch(Exception $e){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong adding new toilet, please try again");
+        }
 
      // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering the new Toilet! It will be visible on the map after verification");

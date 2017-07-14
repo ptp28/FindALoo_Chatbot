@@ -68,13 +68,13 @@ class UserController extends Controller
             $userdetails->contact=$request->user_contact;
             $userdetails->gender=$request->user_gender;
             $userdetails->age=$request->user_age;
-            $userdetails->role=1;
+            $userdetails->role=3;//3 is the normal user, 2 is moderator, 1 is admin
             $userdetails->save();
             //adding login credentials
             $userlogin=new Logins;
             $userlogin->username=$request->user_email;
             $userlogin->password=Hash::make($request->user_password);
-            $userlogin->role=1;
+            $userlogin->role=3;
             $userlogin->active=-2;//change it later, -2 for deactivated
             $userlogin->verify_token=$v_token;//use it for sending confirmation mail
             $userlogin->save();
