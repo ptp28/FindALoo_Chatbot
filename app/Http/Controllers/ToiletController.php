@@ -402,8 +402,14 @@ class ToiletController extends Controller
     {
         $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        $visits = ToiletVisits::where(['user_id'=>$userid])->get();
+        // $visits = ToiletVisits::where(['user_id'=>$userid])->get();
+        $visits = DB::table('Toilet_Visits')
+        ->join('MSDPUSERToilet_Block','Toilet_Visits.toilet_id','=','MSDPUSERToilet_Block.OBJECTID')
+        ->select('Toilet_Visits.id','Toilet_Visits.user_id','MSDPUSERToilet_Block.OBJECTID','MSDPUSERToilet_Block.NAME','MSDPUSERToilet_Block.ADDRESS','Toilet_Visits.created_at')
+        ->where(['user_id'=>$userid])
+        ->get();
         if(sizeof($visits)>0){
+
             $data=array("status"=>"success","data"=>$visits, "message"=>"Visits fetched");
         }
         else
