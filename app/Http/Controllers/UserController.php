@@ -44,7 +44,7 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public function create(Request $request){
+    public function oldcreate(Request $request){
 
         $validator = Validator::make($request->all(), [
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
@@ -89,6 +89,77 @@ class UserController extends Controller
                 $message
                 ->to($user_email)
                 ->cc('jayantjnp@gmail.com')
+                ->subject('Registration: FindaLoo')
+                ->from('admin@e-yantra.org', 'e-Yantra IITB');
+            });
+
+           
+        });//end of transaction
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! A confirmation email has been sent to your registered email id");
+        //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
+        return json_encode($data);
+    }//end of create
+
+
+    /**
+     *  for creating a new user.
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+    public function create(Request $request){
+        Log::info("Create function called");
+
+        $validator = Validator::make($request->all(), [
+            'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
+            'user_email' => 'required|email|unique:login,username',
+            'g_user_id' => 'required|min:4|unique:login,g_user_id',
+            'user_fcm' => 'required|unique:login,fcm_token'
+        ]);
+
+
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Registration failed");
+            return json_encode($data);
+        }
+
+        Log::info("user_data via post method".print_r($request->all(),true));
+
+        DB::transaction(function($request) use ($request){
+
+            //adding user details
+            // $v_token = str_random(50);
+            $userdetails=new UserRegister;
+            $userdetails->name=$request->user_name;
+            $userdetails->email=$request->user_email;
+            // $userdetails->contact=$request->g_user_id;
+            // $userdetails->gender=$request->user_gender;
+            // $userdetails->age=$request->user_age;
+            $userdetails->role=3;//3 is the normal user, 2 is moderator, 1 is admin
+            $userdetails->save();
+
+            Log::info("Entry made into the Register for".$request->user_email);
+            //adding login credentials
+            $userlogin=new Logins;
+            $userlogin->username=$request->user_email;
+            $userlogin->g_user_id= $request->g_user_id;
+            $userlogin->role=3;
+            $userlogin->active=1;//change it later, -2 for deactivated
+            $userlogin->fcm_token=$request->user_fcm;//use it for sending confirmation mail
+            $userlogin->save();
+            
+            Log::info("Entry made into the Login table for".$request->user_email);
+
+            $user_email=$request->user_email;//to prevent serialisation error
+
+
+            //Send mail to user for confirmation
+            Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => 'test', 'password' => 'test', 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
+            {
+                
+                $message
+                ->to($user_email)
+                ->cc('tusharshahsp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });
