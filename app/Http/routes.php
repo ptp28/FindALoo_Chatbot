@@ -96,7 +96,7 @@ Route::GET('/showToiletsIIT',[
 ]);
 
 Route::POST('/addFeedback',[
-	'middleware' => 'jwt-auth',
+	// 'middleware' => 'jwt-auth',
 	'as' => 'addFeedback',
 	'uses' => 'ToiletController@addFeedback'
 ]);

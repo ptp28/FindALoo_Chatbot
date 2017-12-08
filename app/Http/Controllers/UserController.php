@@ -108,22 +108,30 @@ class UserController extends Controller
      */
 
     public function create(Request $request){
-        Log::info("Create function called");
 
         $validator = Validator::make($request->all(), [
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
-            'user_email' => 'required|email|unique:login,username',
-            'g_user_id' => 'required|min:4|unique:login,g_user_id',
-            'user_fcm' => 'required|unique:login,fcm_token'
+            'user_email' => 'required|email|unique:login,username,'.($request->g_user_id ? ",g_user_id,g_user_id," : ''),
+            'g_user_id' => 'required|min:4|unique:login,g_user_id,'.($request->user_email ? ",username,username," : ''),
+            'user_fcm' => 'required|unique:login,fcm_token,'.($request->g_user_id ? ",g_user_id,g_user_id," : '')
         ]);
 
-
-        if ($validator->fails()) {
+        if($validator->fails()) {
+             Log::info("Create function called3");
+            // $failedRules = $validator->failed();
+            // if(isset($failedRules['user_email']['Unique'])) {
+            //     $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
+            //     return json_encode($data);
+            // }
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Registration failed");
             return json_encode($data);
         }
 
-        Log::info("user_data via post method".print_r($request->all(),true));
+        $existing = Logins::where('g_user_id',$request->g_user_id)->value('username');
+        if($existing == $request->user_email){
+            $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
+            return json_encode($data);
+        }
 
         DB::transaction(function($request) use ($request){
 
@@ -162,9 +170,7 @@ class UserController extends Controller
                 ->cc('tusharshahsp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
-            });
-
-           
+            });          
         });//end of transaction
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! A confirmation email has been sent to your registered email id");
         //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
@@ -271,4 +277,56 @@ class UserController extends Controller
     {
         //
     }
+
+
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function sendNotification($id)
+    {
+        //
+
+        $url = 'https://fcm.googleapis.com/fcm/send';
+
+        $server_key = 'AAAApmy66Lo:APA91bEo96KuCqgYrFczDOB-xixV_3LsVElSGsPnuU43RdeblTdDwcI_yX3RSreqLIwTJSXeX0fHpJ88KKFTTG_SQbf_h9TSGFrH19xA4HYIPEhQWN4XvbY1DRLJa4OZH7676HLSMs6E';
+
+        $headers = array(
+                'Content-Type:application/json',
+                'Authorization:key=' . $server_key
+        );
+
+        $message = array(
+        //use 'registration_ids' instead of 'to' for array of ids and change $reg_id to that id
+                'registration_ids' => $fcm_array,
+                'priority' => "high",
+            //'notification' => array(
+            //        "title" => "ALERT",
+            //        "body" => "Individual in danger"),
+            'data' => array(
+                "Title" => $fcm_title,
+                "message" => $fcm_message
+            )
+            );
+
+        $ch = curl_init();
+
+        curl_setopt_array($ch, array(
+                CURLOPT_URL => 'https://fcm.googleapis.com/fcm/send',
+                CURLOPT_HTTPHEADER => $headers,
+                CURLOPT_POST => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POSTFIELDS => json_encode($message)
+        ));
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+            
+    }
+
+
+
 }
