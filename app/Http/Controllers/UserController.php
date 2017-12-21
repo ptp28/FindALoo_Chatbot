@@ -113,7 +113,8 @@ class UserController extends Controller
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
             'user_email' => 'required|email|unique:login,username,'.($request->g_user_id ? ",g_user_id,g_user_id," : ''),
             'g_user_id' => 'required|min:4|unique:login,g_user_id,'.($request->user_email ? ",username,username," : ''),
-            'user_fcm' => 'required|unique:login,fcm_token,'.($request->g_user_id ? ",g_user_id,g_user_id," : '')
+            'user_fcm' => 'required'
+            // .($request->g_user_id ? ",g_user_id,g_user_id," : '')
         ]);
 
         if($validator->fails()) {
@@ -127,8 +128,14 @@ class UserController extends Controller
             return json_encode($data);
         }
 
-        $existing = Logins::where('g_user_id',$request->g_user_id)->value('username');
-        if($existing == $request->user_email){
+        $existing = Logins::where('g_user_id',$request->g_user_id)->first();
+        if($existing->username == $request->user_email){
+
+            if($existing->fcm_token != $request->user_fcm){
+                $existing->fcm_token = $request->user_fcm;
+                $existing->save();
+            }
+            
             $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
             return json_encode($data);
         }

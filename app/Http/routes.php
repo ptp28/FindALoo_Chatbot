@@ -65,17 +65,30 @@ Route::GET('auth/changePass',[
 ]);
 */
 
+
+Route::POST('/giveGenFeedback',[
+	'as' => 'giveGenFeedback',
+	'uses' => 'ToiletController@giveGenFeedback'
+]);
 Route::get('/showUser',[
 	'middleware' => 'jwt-auth',
 	'as' => 'showUser',
 	'uses' => 'UserController@show'
 ]);
 /**************************Toilets******************************/
+Route::POST('requestReg/regToilet',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'Regrequest',
+	'uses' => 'ToiletController@requestReg'
+]);
 Route::POST('register/addToilet',[
-	'middleware' => 'jwt-auth',
+	// 'middleware' => 'jwt-auth',
 	'as' => 'addToilet',
 	'uses' => 'ToiletController@create'
 ]);
+
+
+
 
 Route::GET('/showToilets',[
 	//'middleware' => 'jwt-auth',
@@ -122,13 +135,13 @@ Route::GET('/showSpcfcToilets',[
 ]);
 //for reporting toilet issue
 Route::POST('/reportIssue',[
-	'middleware' => 'jwt-auth',
+	// 'middleware' => 'jwt-auth',
 	'as' => 'reportIssue',
 	'uses' => 'ToiletController@reportIssue'
 ]);
 //image upload for toilets
-Route::POST('/upldToiletImage',[
-	'middleware' => 'jwt-auth',
+Route::POST('/uploadToiletImage',[
+	// 'middleware' => 'jwt-auth',
 	'as' => 'upldToiletImage',
 	'uses' => 'ToiletController@upload'
 ]);
@@ -136,4 +149,12 @@ Route::POST('/showToltImages',[
 	'middleware' => 'jwt-auth',
 	'as' => 'showToltImages',
 	'uses' => 'ToiletController@showImages'
+]);
+
+
+
+
+Route::POST('/requestClean',[
+	'as' => 'requestClean',
+	'uses' => 'ToiletController@requestClean'
 ]);
