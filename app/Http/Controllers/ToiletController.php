@@ -494,6 +494,7 @@ class ToiletController extends Controller
         $validator = Validator::make($request->all(), [
             'toilet_id' => 'required',
             'g_user_id' => 'required',
+            'active'    => 'required',
             'CLEANLINESS' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
             'MECHANICAL' => 'required_without_all:CHOKING,CLEANLINESS,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
             'ELECTRICAL' => 'required_without_all:CHOKING,MECHANICAL,CLEANLINESS,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
@@ -529,7 +530,7 @@ class ToiletController extends Controller
                 $issue=new ReportIssues;
                 $issue->user_id=$userid;
                 $issue->toilet_id=$request->toilet_id;
-                $issue->active=1;//issue is active now
+                $issue->active=$request->toilet_id;
                 if($request->COMMENT!=null)
                     $issue->COMMENT=$request->COMMENT;
                 if($request->CLEANLINESS!=null)
