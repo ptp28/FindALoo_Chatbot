@@ -483,7 +483,7 @@ class ToiletController extends Controller
         return json_encode($data);
     }
 
-    /**
+    /*
      * API for reporting issues for each toilet
      *
      * @param  int  Request $request
@@ -491,22 +491,24 @@ class ToiletController extends Controller
      */
     public function reportIssue(Request $request)//for registered user
     {
+
         $validator = Validator::make($request->all(), [
             'toilet_id' => 'required',
             'g_user_id' => 'required',
-            'active'    => 'required',
-            'CLEANLINESS' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
-            'MECHANICAL' => 'required_without_all:CHOKING,CLEANLINESS,ELECTRICAL,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
-            'ELECTRICAL' => 'required_without_all:CHOKING,MECHANICAL,CLEANLINESS,PLUMBING,SEWAGE,COMMENT|numeric|min:0|max:1',
-            'PLUMBING' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,CLEANLINESS,SEWAGE,COMMENT|numeric|min:0|max:1',
-            'SEWAGE' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,CLEANLINESS,COMMENT|numeric|min:0|max:1',
-            'COMMENT' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,CLEANLINESS',
-            'toiletPht' => 'image:jpeg,bmp,png|max:3000'
+            'CLEANLINESS' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+            'MECHANICAL' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+            'ELECTRICAL' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+            'PLUMBING' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+            'EMPTYING' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+            'OTHER' => 'required_without_all:CLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENTCLEANLINESS,MECHANICAL,ELECTRICAL,PLUMBING,EMPTYING,OTHER,COMMENT|numeric|min:0|max:1',
+
+            'COMMENT' => 'required_without_all:CHOKING,MECHANICAL,ELECTRICAL,PLUMBING,SEWAGE,CLEANLINESS'
+            // 'toiletPht' => 'image:jpeg,bmp,png|max:3000'
             ],
             [
             'required_without_all' => 'Please select atleast one option',
-            'toiletPht.image' => 'Please upload only .jpg/.png/.bmp file.',
-            'toiletPht.max' => 'Size of the file should be less than 3MB.'
+            // 'toiletPht.image' => 'Please upload only .jpg/.png/.bmp file.',
+            // 'toiletPht.max' => 'Size of the file should be less than 3MB.'
         ]);
         if ($validator->fails()) {
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Incomplete data");
@@ -530,7 +532,7 @@ class ToiletController extends Controller
                 $issue=new ReportIssues;
                 $issue->user_id=$userid;
                 $issue->toilet_id=$request->toilet_id;
-                $issue->active=$request->toilet_id;
+                // $issue->active=$request->toilet_id;
                 if($request->COMMENT!=null)
                     $issue->COMMENT=$request->COMMENT;
                 if($request->CLEANLINESS!=null)
@@ -771,11 +773,11 @@ class ToiletController extends Controller
 
             }
             
-            if($ratings->CONDITION_RAW<=2.33 && $ratings->CONDITION_RAW>=1)
+            if($ratings->CONDITION_RAW<=2.33 && $ratings->CONDITION_RAW>=0)
                 $ratings->CONDITION='Poor';
             else if($ratings->CONDITION_RAW>2.33 && $ratings->CONDITION_RAW<=3.66)
                 $ratings->CONDITION='Moderate';
-            else
+            else  if($ratings->CONDITION_RAW>3.66)
                 $ratings->CONDITION='Good';
             $ratings->save();
         });//transaction ends here
@@ -996,7 +998,205 @@ class ToiletController extends Controller
         return json_encode($data);
         
     }
+
+
+    public function toiletActive(Request $request)
+    {
+        Log::info("feedback");
+
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required',
+            'active' => 'required',
+            'g_user_id' => 'required|min:4',
+        ]);
+
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete data");
+            return json_encode($data);
+        }
+        $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
+        Log::info("data ".print_r($user,true));
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        //$userid=6;
+        $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+        if(sizeof($ratings)==0){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
+            return json_encode($data);
+        }
+        $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
+        // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
+            // return $toiletdetails;
+        
+        DB::transaction(function($request) use ($request, $userid, $checkUser, $ratings){
+        // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+            
+            
+            
+           
+        });//transaction ends here
+
+        // Log::info("data the way you want");
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+        return json_encode($data);
+      
+    }
+
+
+    public function toiletstats(Request $request)
+    {
+        Log::info("toiletstats");
+
+        $validator = Validator::make($request->all(), [
+            'criteria' => 'required',
+        ]);
+
+
+
+        if ($validator->fails()) 
+        {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"criteria not specified");
+            return json_encode($data);
+        }
+
+        if($request->criteria=0)
+        {
+           $toiletdetails[0]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW <2.33') ;
+
+           $toiletdetails[1]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW BETWEEN 2.33 AND 3.66') ;
+
+           $toiletdetails[2]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW > 3.66') ;
+
+
+            log::info("number of toilets ".print_r($toiletdetails,true));
+            if(sizeof($toiletdetails)>0)
+            {
+                $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+                return json_encode($data);
+            }
+            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            return json_encode($data); 
+        }
+
+        if($request->criteria=1)
+        {
+ 
+            $max_visit=DB::select('SELECT MAX(COUNT(toiled_id)) FROM Toilet_Visits') ;
+
+           $toiletdetails[0]=DB::select('SELECT COUNT(toiled_id) as toilet_visits, OBJECTID, NAME,lat,lng FROM Toilet_Visits 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0* '.$max_visit);
+
+           $toiletdetails[1]=DB::select('SELECT COUNT(toiled_id) as toilet_visits, OBJECTID, NAME,lat,lng FROM Toilet_Visits 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.25* '.$max_visit) ;
+
+           $toiletdetails[2]=DB::select('SELECT COUNT(toiled_id) as toilet_visits, OBJECTID, NAME,lat,lng FROM Toilet_Visits 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.50* '.$max_visit) ;
+
+           $toiletdetails[3]=DB::select('SELECT COUNT(toiled_id) as toilet_visits, OBJECTID, NAME,lat,lng FROM Toilet_Visits 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.75*'. $max_visit) ;
+
+
+            log::info("number of toilets ".print_r($toiletdetails,true));
+            if(sizeof($toiletdetails)>0)
+            {
+                $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+                return json_encode($data);
+            }
+            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            return json_encode($data); 
+        }
+
+        if($request->criteria=2)
+        {
+ 
+            $max_issue=DB::select('SELECT MAX(COUNT(toiled_id)) FROM Report_Issues') ;
+
+            $toiletdetails[0]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0* '$max_issue);
+
+            $toiletdetails[1]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.25*'. $max_issue) ;
+
+            $toiletdetails[2]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.50*'. $max_issue) ;
+
+            $toiletdetails[3]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
+               left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
+               WHERE COUNT(toiled_id) >= 0.75*'. $max_issue) ;
+
+
+            log::info("number of toilets ".print_r($toiletdetails,true));
+            if(sizeof($toiletdetails)>0)
+            {
+                $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+                return json_encode($data);
+            }
+            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            return json_encode($data); 
+        }
+        
+
+      
+        // });//transaction ends here
+
+        // // Log::info("data the way you want");
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+        return json_encode($data);
+      
+    }
+
+
+    
 }
 
 
 
+
+
+// SELECT 
+//         ecd.state, ecd.elsi_clg_id, ecd.`district`, ecd.clg_code, ecd.`college_name`,
+
+//          count(epd.id) as Registrations,
+//          SUM(CASE WHEN epd.proposal_date is not null THEN 1 ELSE 0 END) as Proposal_submitted,
+//          SUM(CASE WHEN  epd.project_status = 4 THEN 1 ELSE 0 END) as Proposal_rejected,
+//          SUM(CASE WHEN  epd.project_status = 5 THEN 1 ELSE 0 END) as Proposal_accepted,
+//          SUM(CASE WHEN  epd.project_status = 3 THEN 1 ELSE 0 END) as Proposal_unregistered,
+         
+         
+
+//      FROM eyic2018.`eyic_project_dtls` AS epd
+ 
+//      JOIN college_master_list.college_list AS ecd ON ecd.elsi_clg_id = epd.clg_id
+//      JOIN eyic2018.`eyic_project_dtls` AS epd1 ON epd1.clg_id = ecd.elsi_clg_id
+//      left JOIN eyic2018.`eyic_project_dtls` AS epd2 ON epd2.clg_id = ecd.elsi_clg_id
+//      left JOIN eyic2018.`eyic_project_dtls` AS epd3 ON epd3.clg_id = ecd.elsi_clg_id
+//      left JOIN eyic2018.`eyic_project_dtls` AS epd4 ON epd4.clg_id = ecd.elsi_clg_id
+
+
+// where epd1.id != epd2.id and epd1.id != epd3.id and epd1.id != epd4.id and epd3.id != epd2.id and epd4.id != epd2.id and epd3.id != epd4.id
+// group by ecd.elsi_clg_id
+// order by ecd.state,ecd.`district`, ecd.`college_name`
+
+
+// SELECT 
+//         ecd.state, ecd.elsi_clg_id, ecd.`district`, ecd.clg_code, ecd.`college_name`, GROUP_CONCAT(epd.proj_name
+//                       ORDER BY epd.proj_name SEPARATOR ',') as project,
+
+//          count(epd.id) as Registrations,
+//          SUM(CASE WHEN epd.proposal_date is not null THEN 1 ELSE 0 END) as Proposal_submitted,
+//          SUM(CASE WHEN  epd.project_status = 4 THEN 1 ELSE 0 END) as Proposal_rejected,
+//          SUM(CASE WHEN  epd.project_status = 5 THEN 1 ELSE 0 END) as Proposal_accepted,
+//          SUM(CASE WHEN  epd.project_status = 3 THEN 1 ELSE 0 END) as Proposal_unregistered
+         
+
+//      FROM eyic2018.`eyic_project_dtls` AS epd
+
+//         group by ecd.elsi_clg_id
+//         order by ecd.state,ecd.`district`, ecd.`college_name`
