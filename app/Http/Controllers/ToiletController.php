@@ -1117,7 +1117,7 @@ class ToiletController extends Controller
 
             $toiletdetails[0]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
                left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
-               WHERE COUNT(toiled_id) >= 0* '$max_issue);
+               WHERE COUNT(toiled_id) >= 0* '.$max_issue);
 
             $toiletdetails[1]=DB::select('SELECT COUNT(toiled_id) as toilet_issues, OBJECTID, NAME,lat,lng FROM Report_Issues 
                left join MSDPUSERToilet_Block as mutb on mutb.OBJECTID = toiled_id 
