@@ -151,8 +151,7 @@ Route::POST('/showToltImages',[
 	'uses' => 'ToiletController@showImages'
 ]);
 
-Route::POST('/toiletstats',[
-	'middleware' => 'jwt-auth',
+Route::GET('/toiletstats',[
 	'as' => 'toiletstats',
 	'uses' => 'ToiletController@toiletstats'
 ]);
