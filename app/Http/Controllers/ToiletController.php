@@ -1083,7 +1083,12 @@ class ToiletController extends Controller
             $max_visit1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Toilet_Visits ) as max_count')  ;
             Log::info("data test" .print_r($max_visit1,true));
             $max_visit = $max_visit1[0]->max_c;
-        
+            
+
+            if(is_null($max_visit) || empty($max_visit)){
+                $max_visit = 0;
+            }
+            
             $toiletdetails[0] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
                 ->havingRaw('COUNT(toilet_id) > 0*'.$max_visit.' AND COUNT(toilet_id) <= 0.25*'.$max_visit)->get();
@@ -1116,6 +1121,10 @@ class ToiletController extends Controller
             $max_issue1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Report_Issues group by toilet_id) as max_count')  ;
              Log::info("data test 2" .print_r($max_issue1,true));
             $max_issue = $max_issue1[0]->max_c;
+
+            if(is_null($max_issue) || empty($max_issue)){
+                $max_issue = 0;
+            }
             Log::info("max_issue".$max_issue);
             $toiletdetails[0] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
