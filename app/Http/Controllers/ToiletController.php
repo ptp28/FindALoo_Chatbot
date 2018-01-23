@@ -527,6 +527,7 @@ class ToiletController extends Controller
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
 
         //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
+
         try{
             $exception=DB::transaction(function($request) use ($request, $userid){
                 $issue=new ReportIssues;
@@ -537,30 +538,16 @@ class ToiletController extends Controller
                     $issue->COMMENT=$request->COMMENT;
                 if($request->CLEANLINESS!=null)
                     $issue->CLEANLINESS=$request->CLEANLINESS;
-                if($request->CHOKING!=null)
-                    $issue->CHOKING=$request->CHOKING;
+                // if($request->CHOKING!=null)
+                //     $issue->CHOKING=$request->CHOKING;
                 if($request->MECHANICAL!=null)
                     $issue->MECHANICAL=$request->MECHANICAL;
                 if($request->ELECTRICAL!=null)
                     $issue->ELECTRICAL=$request->ELECTRICAL;
                 if($request->PLUMBING!=null)
                     $issue->PLUMBING=$request->PLUMBING;
-                if($request->SEWAGE!=null)
-                    $issue->SEWAGE=$request->SEWAGE;
-                if($request->toiletPht!=null){
-                    //do image uploading here
-                    $path = public_path().'/img/toilets/';
-                    $ext = strtolower($request->file('toiletPht')->getClientOriginalExtension());
-                    $filename = str_random(15).".".$ext;
-                    $request->file('toiletPht')->move($path, $filename);
-                    $toiletPhoto=new ToiletImages;
-                    $toiletPhoto->user_id=$userid;
-                    $toiletPhoto->toilet_id=$request->toilet_id;
-                    $toiletPhoto->image_name=$filename;
-                    $toiletPhoto->active=1;
-                    $toiletPhoto->save();
-                    $issue->image_id=$toiletPhoto->id;
-                }
+                if($request->EMPTYING!=null)
+                    $issue->EMPTYING=$request->EMPTYING;
                 $issue->save();
 
                 //add provision for sending issue to admin
@@ -576,6 +563,83 @@ class ToiletController extends Controller
         $data=array("status"=>"success","data"=>null, "message"=>"Issue Reported");
         return json_encode($data);
     }
+
+    // public function reportToiletImage(Request $request)
+    // {
+
+
+    //     $validator = Validator::make($request->all(), [
+    //         'toilet_id' => 'required',
+    //         'g_user_id' => 'required',
+           
+    //         'toiletPht' => 'image:jpeg,bmp,png|max:3000'
+    //         ],
+    //         [
+    //         'required_without_all' => 'Please select atleast one option',
+    //         'toiletPht.image' => 'Please upload only .jpg/.png/.bmp file.',
+    //         'toiletPht.max' => 'Size of the file should be less than 3MB.'
+    //     ]);
+    //     if ($validator->fails()) {
+    //         $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Incomplete data");
+    //         return json_encode($data);
+    //     }
+
+
+    //     $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
+    //     Log::info("data ".print_r($user,true));
+    //     $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+
+    //     $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
+
+    //     try{
+    //         $exception=DB::transaction(function($request) use ($request, $userid){
+    //             $issue=new ReportIssues;
+    //             $issue->user_id=$userid;
+    //             $issue->toilet_id=$request->toilet_id;
+    //             // $issue->active=$request->toilet_id;
+    //             if($request->COMMENT!=null)
+    //                 $issue->COMMENT=$request->COMMENT;
+    //             if($request->CLEANLINESS!=null)
+    //                 $issue->CLEANLINESS=$request->CLEANLINESS;
+    //             // if($request->CHOKING!=null)
+    //             //     $issue->CHOKING=$request->CHOKING;
+    //             if($request->MECHANICAL!=null)
+    //                 $issue->MECHANICAL=$request->MECHANICAL;
+    //             if($request->ELECTRICAL!=null)
+    //                 $issue->ELECTRICAL=$request->ELECTRICAL;
+    //             if($request->PLUMBING!=null)
+    //                 $issue->PLUMBING=$request->PLUMBING;
+    //             if($request->EMPTYING!=null)
+    //                 $issue->EMPTYING=$request->EMPTYING;
+    //             $issue->save();
+
+    //             //add provision for sending issue to admin
+    //         });//transaction ends here
+    //         if(is_null($exception)){
+    //             $data=array("status"=>"success","data"=>null, "message"=>"Issue Reported");
+    //         }
+
+    //     }
+    //     catch(Exception $e){
+    //         $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+    //     }
+    //     $data=array("status"=>"success","data"=>null, "message"=>"Issue Reported");
+    //     return json_encode($data);
+    //     if($request->toiletPht!=null){
+    //                 //do image uploading here
+    //                 $path = public_path().'/img/toilets/';
+    //                 $ext = strtolower($request->file('toiletPht')->getClientOriginalExtension());
+    //                 $filename = str_random(15).".".$ext;
+    //                 $request->file('toiletPht')->move($path, $filename);
+    //                 $toiletPhoto=new ToiletImages;
+    //                 $toiletPhoto->user_id=$userid;
+    //                 $toiletPhoto->toilet_id=$request->toilet_id;
+    //                 $toiletPhoto->image_name=$filename;
+    //                 $toiletPhoto->active=1;
+    //                 $toiletPhoto->save();
+    //                 $issue->image_id=$toiletPhoto->id;
+    //             }
+    // }
 
     /**
      * Show the form for editing the specified resource.
@@ -1017,27 +1081,23 @@ class ToiletController extends Controller
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
         Log::info("data ".print_r($user,true));
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        //$userid=6;
-        $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
-        if(sizeof($ratings)==0){
-            $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
-            return json_encode($data);
-        }
-        $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
-        // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
-            // return $toiletdetails;
         
-        DB::transaction(function($request) use ($request, $userid, $checkUser, $ratings){
-        // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
-        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-            
-            
-            
-           
-        });//transaction ends here
-
-        // Log::info("data the way you want");
-        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
+        try{
+            $exception =DB::transaction(function($request) use ($request, $userid){
+                if($request->active!=null){
+                    $toiletPhoto= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+                    $toiletPhoto->active=$request->active;
+                    $toiletPhoto->save();
+                }  
+            });//transaction ends here
+            if(is_null($exception)){
+                    $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your feedback");
+            }
+        }
+        catch(Exception $e){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+        }
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your feedback");
         return json_encode($data);
       
     }
