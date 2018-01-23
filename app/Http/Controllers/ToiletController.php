@@ -700,11 +700,11 @@ class ToiletController extends Controller
 
         $validator = Validator::make($request->all(), [
             'toilet_id' => 'required',
-            'toilet_cleanliness' => 'required|numeric|min:1|max:5',
-            'toilet_maintenance' => 'required|numeric|min:1|max:5',
-            'toilet_ambience' => 'required|numeric|min:1|max:5',
-            'toilet_safety' => 'required|numeric|min:1|max:5',
-            'toilet_water' => 'required|numeric|min:1|max:5',
+            'toilet_cleanliness' => 'required|numeric|min:0|max:5',
+            'toilet_maintenance' => 'required|numeric|min:0|max:5',
+            'toilet_ambience' => 'required|numeric|min:0|max:5',
+            'toilet_safety' => 'required|numeric|min:0|max:5',
+            'toilet_water' => 'required|numeric|min:0|max:5',
             'g_user_id' => 'required|min:4',
         ]);
 
@@ -1088,7 +1088,7 @@ class ToiletController extends Controller
             if(is_null($max_visit) || empty($max_visit)){
                 $max_visit = 0;
             }
-            
+
             $toiletdetails[0] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
                 ->havingRaw('COUNT(toilet_id) > 0*'.$max_visit.' AND COUNT(toilet_id) <= 0.25*'.$max_visit)->get();
