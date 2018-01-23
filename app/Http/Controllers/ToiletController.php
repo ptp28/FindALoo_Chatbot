@@ -1074,7 +1074,7 @@ class ToiletController extends Controller
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
                 return json_encode($data);
             }
-            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
             return json_encode($data); 
         }
 
@@ -1106,7 +1106,7 @@ class ToiletController extends Controller
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
                 return json_encode($data);
             }
-            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
             return json_encode($data); 
         }
 
@@ -1116,14 +1116,14 @@ class ToiletController extends Controller
             $max_issue1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Report_Issues group by toilet_id) as max_count')  ;
              Log::info("data test 2" .print_r($max_issue1,true));
             $max_issue = $max_issue1[0]->max_c;
-
+            Log::info("max_issue".$max_issue);
             $toiletdetails[0] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
-                ->havingRaw('COUNT(toilet_id) > 0*'.$max_issue.' AND COUNT(toilet_id) <= 0.25*'.$max_issue)->get();
+                ->havingRaw('COUNT(toilet_id) > 0*'.$max_issue.' AND COUNT(toilet_id) <= 0.25* '.$max_issue)->get();
 
             $toiletdetails[1] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
-                ->havingRaw('COUNT(toilet_id) > 0.25*'.$max_issue.' AND COUNT(toilet_id) <= 0.50*'.$max_issue)->get();
+                ->havingRaw('COUNT(toilet_id) > 0.25*'.$max_issue.' AND COUNT(toilet_id) <= 0.50* '.$max_issue)->get();
 
             $toiletdetails[2] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
@@ -1131,7 +1131,7 @@ class ToiletController extends Controller
 
             $toiletdetails[3] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
-                ->havingRaw('COUNT(toilet_id) > 0.75*'.$max_issue)->get();
+                ->havingRaw('COUNT(toilet_id) >0.75*'.$max_issue)->get();
 
 
             log::info("number of toilets ".print_r($toiletdetails,true));
@@ -1140,7 +1140,7 @@ class ToiletController extends Controller
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
                 return json_encode($data);
             }
-            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
             return json_encode($data); 
         }
         
@@ -1153,11 +1153,11 @@ class ToiletController extends Controller
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
                 return json_encode($data);
             }
-            $data=array("status"=>"fail","data"=>null, "message"=>"No toilets found in your area");
+            $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
             return json_encode($data);
          }
 
-        $data=array("status"=>"success","data"=>null, "message"=>"Such Criteria does not exist");
+        $data=array("status"=>"success","data"=>[], "message"=>"Such Criteria does not exist");
         return json_encode($data);
       
     }
