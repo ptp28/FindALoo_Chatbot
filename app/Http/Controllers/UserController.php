@@ -58,7 +58,7 @@ class UserController extends Controller
             return json_encode($data);
         }
 
-        DB::transaction(function($request) use ($request){
+        DB::transaction(function() use ($request){
 
             //adding user details
             $v_token = str_random(50);
@@ -113,24 +113,19 @@ class UserController extends Controller
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
             'user_email' => 'required|email|unique:login,username,'.($request->g_user_id ? ",g_user_id,g_user_id," : ''),
             'g_user_id' => 'required|min:4|unique:login,g_user_id,'.($request->user_email ? ",username,username," : ''),
+            'user_img' => 'required|url|unique:login,image',
             'user_fcm' => 'required'
             // .($request->g_user_id ? ",g_user_id,g_user_id," : '')
         ]);
 
         if($validator->fails()) {
-             Log::info("Create function called3");
-            // $failedRules = $validator->failed();
-            // if(isset($failedRules['user_email']['Unique'])) {
-            //     $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
-            //     return json_encode($data);
-            // }
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Registration failed");
             return json_encode($data);
         }
 
         $existing = Logins::where('g_user_id',$request->g_user_id)->first();
         Log::info("current username".print_r($existing,true));
-        if(count($existing) > 0){
+        if(!empty($existing) && !is_null($existing)){
         if($existing->username == $request->user_email){
 
             if($existing->fcm_token != $request->user_fcm){
@@ -143,24 +138,26 @@ class UserController extends Controller
         }
         }
 
-        DB::transaction(function($request) use ($request){
+        DB::transaction(function() use ($request){
 
             //adding user details
             // $v_token = str_random(50);
             $userdetails=new UserRegister;
             $userdetails->name=$request->user_name;
             $userdetails->email=$request->user_email;
+            $userdetails->image=$request->user_img;
             // $userdetails->contact=$request->g_user_id;
             // $userdetails->gender=$request->user_gender;
             // $userdetails->age=$request->user_age;
             $userdetails->role=3;//3 is the normal user, 2 is moderator, 1 is admin
-            $userdetails->save();
+            
 
             Log::info("Entry made into the Register for".$request->user_email);
             //adding login credentials
             $userlogin=new Logins;
             $userlogin->username=$request->user_email;
             $userlogin->g_user_id= $request->g_user_id;
+            // $userlogin->image = $request->user_img;
             $userlogin->role=3;
             $userlogin->active=1;//change it later, -2 for deactivated
             $userlogin->fcm_token=$request->user_fcm;//use it for sending confirmation mail
@@ -168,10 +165,12 @@ class UserController extends Controller
             
             Log::info("Entry made into the Login table for".$request->user_email);
 
-            $user_email=$request->user_email;//to prevent serialisation error
-
-
+            
+            $userdetails->login_id = $userlogin->getKey();
+            $userdetails->save();
             //Send mail to user for confirmation
+
+            $user_email=$request->user_email;//to prevent serialisation error
             Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => 'test', 'password' => 'test', 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
             {
                 

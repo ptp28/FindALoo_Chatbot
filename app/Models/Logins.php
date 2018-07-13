@@ -15,6 +15,7 @@ class Logins extends Model implements \Illuminate\Contracts\Auth\Authenticatable
      */
     protected $table = 'login';
 
+    protected $primaryKey = 'id';
     /**
      * The attributes that are mass assignable.
      *

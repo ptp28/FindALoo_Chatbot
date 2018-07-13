@@ -25,6 +25,7 @@ use App\Models\ToiletReq;
 use App\Models\MSDPToiletRegister;
 use App\Models\ReportIssues;
 use App\Models\General_Feedback;
+use App\Models\Comment;
 //image
 use Image;
 use File;
@@ -48,13 +49,23 @@ class ToiletController extends Controller
      */
     public function create(Request $request){
 
-
+        Log::info("datat ".print_r($request->all(), true));
 
         $validator = Validator::make($request->all(), [
             'toilet_lat' => 'required|min:5',
             'toilet_lng' => 'required|min:5',
             'toilet_name' => 'required',
             'g_user_id'   => 'required',
+            'time_open'   => 'required',
+            'time_close'   => 'required',
+            'free'   => 'required',
+            'dr_water'   => 'required',
+            'men'   => 'required',
+            'women'   => 'required',
+            'disabled'   => 'required',
+            'western'   => 'required',
+            'indian'   => 'required',
+            'napkin'   => 'required'
            // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
            // 'toilet_organisation' => 'required|min:5'
         ]);
@@ -68,7 +79,7 @@ class ToiletController extends Controller
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
         Log::info("data ".print_r($user,true));
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-
+        Log::info("request data 1".print_r($request->all(),true));
         // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         // $userRole=$user->role;//getting user role
         // if($userRole!=1 && $userRole!=2)
@@ -78,11 +89,11 @@ class ToiletController extends Controller
         // }
         
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        try{
-            $exception=DB::transaction(function($request) use ($request, $userid){
+         try{
+            $exception=DB::transaction(function() use ($request, $userid){
                 
                 
-                
+                // Log::info("Request Data ".print_r($request,true));
 
             // $toiletdetails=new ToiletRegister;
             // $toiletdetails->lat=$request->toilet_lat;
@@ -97,22 +108,48 @@ class ToiletController extends Controller
             // if($request->toilet_ownership!=null)
             //     $toiletdetails->ownership=$request->toilet_ownership;
             // $toiletdetails->save();
+                Log::info("request data inside controller ".print_r($request->all(), true));
                 $toiletdetails=new MSDPToiletRegister;
-                $toiletdetails->lat=$request->toilet_lat;
-                $toiletdetails->lng=$request->toilet_lng;
+                $toiletdetails->lat=$request->get('toilet_lat');
+                $toiletdetails->lng=$request->get('toilet_lng');
                 $toiletdetails->USERID=$userid;
                 if($request->toilet_name!=null)
-                    $toiletdetails->NAME=$request->toilet_name;
+                    $toiletdetails->NAME=$request->get('toilet_name');
                 if($request->toilet_address!=null)
-                    $toiletdetails->ADDRESS=$request->toilet_address;
+                    $toiletdetails->ADDRESS=$request->get('toilet_address');
                 if($request->toilet_organisation!=null)
-                    $toiletdetails->ORGNAME=$request->toilet_organisation;
+                    $toiletdetails->ORGNAME=$request->get('toilet_organisation');
                 if($request->toilet_ownership!=null)
-                    $toiletdetails->OWNERSHIP=$request->toilet_ownership;
-                $toiletdetails->ACTIVE=0;
-                $toiletdetails->save();
-                $this->toilet_id = -1; //keeping it -1 for new toilet
+                    $toiletdetails->OWNERSHIP=$request->get('toilet_ownership');
+                $toiletdetails->ACTIVE=1;
+                if($request->time_open !=null)
+                    $toiletdetails->time_open=$request->get('time_open');
+                if($request->time_close !=null)
+                {
+                    $toiletdetails->time_close=$request->get('time_close');
+                    Log::info("datat ".$request->get('time_close'));
+                }
+                if($request->free !=null)
+                    $toiletdetails->free=$request->get('free');
+                if($request->dr_water !=null)
+                    $toiletdetails->dr_water=$request->get('dr_water');
+                if($request->men !=null)
+                    $toiletdetails->men=$request->get('men');
+                if($request->women !=null)
+                    $toiletdetails->women=$request->get('women');
+                if($request->disabled !=null)
+                    $toiletdetails->disabled=$request->get('disabled');
+                if($request->western !=null)
+                    $toiletdetails->western=$request->get('western');
+                if($request->indian !=null)
+                    $toiletdetails->indian=$request->get('indian');
+                if($request->napkin !=null)
+                    $toiletdetails->napkin=$request->get('napkin');
 
+                $toiletdetails->save();
+                $this->toilet_id = $toiletdetails->id; //keeping it -1 for new toilet
+                $toiletdetails->OBJECTID = $toiletdetails->id;
+                 $toiletdetails->save();
                     //add provision for sending issue to admin
                 });//transaction ends here
 
@@ -143,7 +180,17 @@ class ToiletController extends Controller
             'toilet_lng' => 'required|min:5',
             'toilet_name' => 'required',
             'g_user_id'   => 'required',
-           // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
+            'time_open'   => 'required',
+            'time_close'   => 'required',
+            'free'   => 'required',
+            'dr_water'   => 'required',
+            'men'   => 'required',
+            'women'   => 'required',
+            'disabled'   => 'required',
+            'western'   => 'required',
+            'indian'   => 'required',
+            'napkin'   => 'required'
+                       // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
            // 'toilet_organisation' => 'required|min:5'
         ]);
         $toilet_id = -1;
@@ -167,10 +214,10 @@ class ToiletController extends Controller
         
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         try{
-            $exception=DB::transaction(function($request) use ($request, $userid){
+            $exception=DB::transaction(function() use ($request, $userid){
                 
                 
-                $toiletdetails=new ToiletReq();
+                $toiletdetails=new MSDPToiletRegister();
                 $toiletdetails->lat=$request->toilet_lat;
                 $toiletdetails->lng=$request->toilet_lng;
                 $toiletdetails->user_id=$userid;
@@ -182,10 +229,27 @@ class ToiletController extends Controller
                     $toiletdetails->orgname=$request->toilet_organisation;
                 if($request->toilet_ownership!=null)
                     $toiletdetails->ownership=$request->toilet_ownership;
-                
-                $toiletdetails->save();
+                if($request->time_open !=null)
+                    $toiletdetails->time_open=$request->time_open;
+                if($request->time_close !=null)
+                    $toiletdetails->time_close=$request->time_close;
+                if($request->money !=null)
+                    $toiletdetails->free=$request->free;
+                if($request->drinking_water !=null)
+                    $toiletdetails->dr_water=$request->dr_water;
+                if($request->male !=null)
+                    $toiletdetails->men=$request->men;
+                if($request->female !=null)
+                    $toiletdetails->women=$request->women;
+                if($request->disabled !=null)
+                    $toiletdetails->disabled=$request->disabled;
+                if($request->western !=null)
+                    $toiletdetails->western=$request->western;
+                if($request->indian !=null)
+                    $toiletdetails->indian=$request->indian;
+                if($request->napkin !=null)
+                    $toiletdetails->napkin=$request->napkin;
                 // $this->toilet_id = -1; //keeping it -1 for new toilet
-
                     //add provision for sending issue to admin
                 });//transaction ends here
 
@@ -197,6 +261,7 @@ class ToiletController extends Controller
         }
         catch(Exception $e){
             $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong adding new toilet, please try again");
+            return json_encode($data);
         }
 
      // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
@@ -251,7 +316,9 @@ class ToiletController extends Controller
         //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
         //     // return json_encode($data);
         // }
+
         $toiletdetails=DB::select('SELECT id,lat,lng,address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM toilets HAVING distance < :rad',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad]);
+        Log::info("data ".print_r($toiletdetails, true));
         if(sizeof($toiletdetails)>0)
         {
             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -320,6 +387,8 @@ class ToiletController extends Controller
      *
      * @param  Request $request
      * @return \Illuminate\Http\Response
+
+
      */
     public function showSpecificToiletOld(Request $request)
     {
@@ -331,7 +400,8 @@ class ToiletController extends Controller
             return json_encode($data);
         }
         
-        $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->get();
+        $toiletdetails=ToiletRegister::where(['id'=>$request->toilet_id])->select('OBJECTID', 'NAME','lat','lng','wardheader','address','ORGNAME','ownership','countms','countfs','condition','condition_raw','cleanliness','maintenance' ,'ambience','water','safety','SURVEYEDDA')->get();
+        Log::info("data ".print_r($toiletdetails,true));
         if(sizeof($toiletdetails)>0)
         {
             $toiletdetails=$toiletdetails[0];
@@ -398,7 +468,8 @@ class ToiletController extends Controller
             return json_encode($data);
         }
         
-        $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->select('OBJECTID', 'NAME','lat','lng','wardheader','address','ORGNAME','ownership','countms','countfs','condition','condition_raw','cleanliness','maintenance' ,'ambience','water','safety','SURVEYEDDA')->get();
+        $toiletdetails=MSDPToiletRegister::where(['id'=>$request->toilet_id])->get();
+        Log::info("data ".print_r($toiletdetails,true));
         if(sizeof($toiletdetails)>0)
         {
             $toiletdetails=$toiletdetails[0];
@@ -438,7 +509,7 @@ class ToiletController extends Controller
 
         //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
         try{
-            $exception=DB::transaction(function($request) use ($request, $userid){
+            $exception=DB::transaction(function() use ($request, $userid){
                 $toiletvisit=new ToiletVisits;
                 $toiletvisit->user_id=$userid;
                 $toiletvisit->toilet_id=$request->toilet_id;
@@ -529,7 +600,7 @@ class ToiletController extends Controller
         //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
 
         try{
-            $exception=DB::transaction(function($request) use ($request, $userid){
+            $exception=DB::transaction(function() use ($request, $userid){
                 $issue=new ReportIssues;
                 $issue->user_id=$userid;
                 $issue->toilet_id=$request->toilet_id;
@@ -684,7 +755,7 @@ class ToiletController extends Controller
         // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             // return $toiletdetails;
         
-        DB::transaction(function($request) use ($request, $userid, $checkUser, $ratings){
+        DB::transaction(function() use ($request, $userid, $checkUser, $ratings){
         // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
             
@@ -789,7 +860,7 @@ class ToiletController extends Controller
         // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             // return $toiletdetails;
         
-        DB::transaction(function($request) use ($request, $userid, $checkUser, $ratings){
+        DB::transaction(function() use ($request, $userid, $checkUser, $ratings){
         // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
             
@@ -884,8 +955,8 @@ class ToiletController extends Controller
 
         
         if($request->toilet_id != -1){
-            $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
-            if(sizeof($cur_toilet)==0){
+            $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->count();
+            if($cur_toilet==0 || is_null($cur_toilet)){
                 Log::info("data reached upload fail 2");
                 $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
                 return json_encode($data);
@@ -893,7 +964,7 @@ class ToiletController extends Controller
         }
 
 
-        DB::transaction(function($request) use ($request){
+        DB::transaction(function() use ($request){
             if($request->toilet_id == -1){
                 $path = public_path().'/img/toilets/requested_toilets/';
             }else{
@@ -910,6 +981,7 @@ class ToiletController extends Controller
 
             $toiletPhoto->user_id=$userid;
             $toiletPhoto->toilet_id=$request->toilet_id;
+            $toiletPhoto->save();
             $filename = str_random(15). $toiletPhoto->getKey().".".$ext;
 
             $toiletPhoto->image_name=$filename;
@@ -981,7 +1053,7 @@ class ToiletController extends Controller
     
         $feedback =  new General_Feedback();
 
-        DB::transaction(function($request) use ($request, $user, $feedback){
+        DB::transaction(function() use ($request, $user, $feedback){
             
 
             $feedback->user_feedback = $request->user_feedback;
@@ -1039,15 +1111,15 @@ class ToiletController extends Controller
 
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
-        $cur_toilet=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
-        if(sizeof($cur_toilet)==0){
+        $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->count();
+        if($cur_toilet==0 || is_null($cur_toilet)){
             $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
             return json_encode($data);
         }
 
     
         
-        DB::transaction(function($request) use ($request, $userid, $cur_toilet){
+        DB::transaction(function() use ($request, $userid, $cur_toilet){
             
 
             $cur_toilet->CLEAN_REQUEST = $cur_toilet->CLEAN_REQUEST+1;
@@ -1083,7 +1155,7 @@ class ToiletController extends Controller
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         
         try{
-            $exception =DB::transaction(function($request) use ($request, $userid){
+            $exception =DB::transaction(function() use ($request, $userid){
                 if($request->active!=null){
                     $toiletPhoto= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
                     $toiletPhoto->active=$request->active;
@@ -1233,49 +1305,214 @@ class ToiletController extends Controller
 
 
     
-}
+
+
+    /**
+     * API for entering/updating feedback for specific toilet
+     *
+     * @param  int  Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addComment(Request $request)
+    {
+        Log::info("feedback");
+
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required',
+            'toilet_comment' => 'required|string',
+            'g_user_id' => 'required|min:4'
+        ]);
+
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete comment data");
+            return json_encode($data);
+        }
+
+        $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
+        Log::info("data ".print_r($user,true));
+        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        
+        DB::transaction(function() use ($request, $userid){
+
+        $comment = new Comment();
+        $comment->toilet_id = $request->toilet_id;
+        $comment->toilet_comment = $request->toilet_comment;
+        $comment->user_id = $userid;
+        $comment->save();
+        });
+
+        Log::info("data the way you want");
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your COMMENT");
+        return json_encode($data);
+      
+    }
 
 
 
 
+    // public function getComment(Request $request)
+    // {
+    //     Log::info("toiletstats");
 
-// SELECT 
-//         ecd.state, ecd.elsi_clg_id, ecd.`district`, ecd.clg_code, ecd.`college_name`,
+    //     $validator = Validator::make($request->all(), [
+    //         'toiet_id' => 'required',
+    //         '' =>  '',
+    //     ]);
 
-//          count(epd.id) as Registrations,
-//          SUM(CASE WHEN epd.proposal_date is not null THEN 1 ELSE 0 END) as Proposal_submitted,
-//          SUM(CASE WHEN  epd.project_status = 4 THEN 1 ELSE 0 END) as Proposal_rejected,
-//          SUM(CASE WHEN  epd.project_status = 5 THEN 1 ELSE 0 END) as Proposal_accepted,
-//          SUM(CASE WHEN  epd.project_status = 3 THEN 1 ELSE 0 END) as Proposal_unregistered,
-         
-         
 
-//      FROM eyic2018.`eyic_project_dtls` AS epd
+
+    //     if ($validator->fails()) 
+    //     {
+    //         $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"criteria not specified");
+    //         return json_encode($data);
+    //     }
+
+    //     if($request->criteria==1)
+    //     {
+    //        $toiletdetails[0]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW <2.33') ;
+
+    //        $toiletdetails[1]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW BETWEEN 2.33 AND 3.66') ;
+
+    //        $toiletdetails[2]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW > 3.66') ;
+
+
+    //         log::info("number of toilets ".print_r($toiletdetails,true));
+    //         if(sizeof($toiletdetails)>0)
+    //         {
+    //             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+    //             return json_encode($data);
+    //         }
+    //         $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
+    //         return json_encode($data); 
+    //     }
+
+    //     if($request->criteria==2)
+    //     {
+    //         $max_visit1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Toilet_Visits ) as max_count')  ;
+    //         Log::info("data test" .print_r($max_visit1,true));
+    //         $max_visit = $max_visit1[0]->max_c;
+            
+
+    //         if(is_null($max_visit) || empty($max_visit)){
+    //             $max_visit = 0;
+    //         }
+
+    //         $toiletdetails[0] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0*'.$max_visit.' AND COUNT(toilet_id) <= 0.25*'.$max_visit)->get();
+
+    //         $toiletdetails[1] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0.25*'.$max_visit.' AND COUNT(toilet_id) <= 0.50*'.$max_visit)->get();
+
+    //         $toiletdetails[2] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0.50*'.$max_visit.' AND COUNT(toilet_id) <= 0.75*'.$max_visit)->get();
+
+    //         $toiletdetails[3] = ToiletVisits::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0.75*'.$max_visit)->get();
+
+    //         log::info("number of toilets ".print_r($toiletdetails,true));
+    //         if(sizeof($toiletdetails)>0)
+    //         {
+    //             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+    //             return json_encode($data);
+    //         }
+    //         $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
+    //         return json_encode($data); 
+    //     }
+
+    //     if($request->criteria==3)
+    //     {
  
-//      JOIN college_master_list.college_list AS ecd ON ecd.elsi_clg_id = epd.clg_id
-//      JOIN eyic2018.`eyic_project_dtls` AS epd1 ON epd1.clg_id = ecd.elsi_clg_id
-//      left JOIN eyic2018.`eyic_project_dtls` AS epd2 ON epd2.clg_id = ecd.elsi_clg_id
-//      left JOIN eyic2018.`eyic_project_dtls` AS epd3 ON epd3.clg_id = ecd.elsi_clg_id
-//      left JOIN eyic2018.`eyic_project_dtls` AS epd4 ON epd4.clg_id = ecd.elsi_clg_id
+    //         $max_issue1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Report_Issues group by toilet_id) as max_count')  ;
+    //          Log::info("data test 2" .print_r($max_issue1,true));
+    //         $max_issue = $max_issue1[0]->max_c;
+
+    //         if(is_null($max_issue) || empty($max_issue)){
+    //             $max_issue = 0;
+    //         }
+    //         Log::info("max_issue".$max_issue);
+    //         $toiletdetails[0] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0*'.$max_issue.' AND COUNT(toilet_id) <= 0.25* '.$max_issue)->get();
+
+    //         $toiletdetails[1] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0.25*'.$max_issue.' AND COUNT(toilet_id) <= 0.50* '.$max_issue)->get();
+
+    //         $toiletdetails[2] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) > 0.50*'.$max_issue.' AND COUNT(toilet_id) <= 0.75*'.$max_issue)->get();
+
+    //         $toiletdetails[3] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
+    //             ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
+    //             ->havingRaw('COUNT(toilet_id) >0.75*'.$max_issue)->get();
 
 
-// where epd1.id != epd2.id and epd1.id != epd3.id and epd1.id != epd4.id and epd3.id != epd2.id and epd4.id != epd2.id and epd3.id != epd4.id
-// group by ecd.elsi_clg_id
-// order by ecd.state,ecd.`district`, ecd.`college_name`
+    //         log::info("number of toilets ".print_r($toiletdetails,true));
+    //         if(sizeof($toiletdetails)>0)
+    //         {
+    //             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+    //             return json_encode($data);
+    //         }
+    //         $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
+    //         return json_encode($data); 
+    //     }
+        
+
+    //      if($request->criteria==4){
+    //         $toiletdetails=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE ACTIVE = 0') ;
+    //         log::info("number of toilets ".print_r($toiletdetails,true));
+    //         if(sizeof($toiletdetails)>0)
+    //         {
+    //             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
+    //             return json_encode($data);
+    //         }
+    //         $data=array("status"=>"success","data"=>[], "message"=>"No toilets found in your area");
+    //         return json_encode($data);
+    //      }
+
+    //     $data=array("status"=>"success","data"=>[], "message"=>"Such Criteria does not exist");
+    //     return json_encode($data);
+      
+    // }
 
 
-// SELECT 
-//         ecd.state, ecd.elsi_clg_id, ecd.`district`, ecd.clg_code, ecd.`college_name`, GROUP_CONCAT(epd.proj_name
-//                       ORDER BY epd.proj_name SEPARATOR ',') as project,
 
-//          count(epd.id) as Registrations,
-//          SUM(CASE WHEN epd.proposal_date is not null THEN 1 ELSE 0 END) as Proposal_submitted,
-//          SUM(CASE WHEN  epd.project_status = 4 THEN 1 ELSE 0 END) as Proposal_rejected,
-//          SUM(CASE WHEN  epd.project_status = 5 THEN 1 ELSE 0 END) as Proposal_accepted,
-//          SUM(CASE WHEN  epd.project_status = 3 THEN 1 ELSE 0 END) as Proposal_unregistered
-         
+    public function getComment(Request $request)
+    {
+        Log::info("feedback");
 
-//      FROM eyic2018.`eyic_project_dtls` AS epd
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+        ]);
 
-//         group by ecd.elsi_clg_id
-//         order by ecd.state,ecd.`district`, ecd.`college_name`
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete data");
+            return json_encode($data);
+        }
+
+        $comments = Comment::where('toilet_id',$request->toilet_id)
+        ->leftJoin('User_Register as ur', 'comment.user_id','=','ur.id')->get();//finding the user from the token
+        Log::info("comment data ".print_r($comments,true));
+        try{
+            
+            if(count($comments) >= 1){
+                $data=array("status"=>"success","data"=> $comments, "message"=>"comments for the toilet");
+                return json_encode($data);
+           
+            }    
+        }
+        catch(Exception $e){
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+        }
+        $data=array("status"=>"success","data"=>null, "message"=>"No comment for this toilet");
+        return json_encode($data); 
+    }
+
+
+
+
+}

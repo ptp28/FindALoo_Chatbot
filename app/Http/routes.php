@@ -76,11 +76,18 @@ Route::get('/showUser',[
 	'uses' => 'UserController@show'
 ]);
 /**************************Toilets******************************/
+// Route::POST('requestReg/regToilet',[
+// 	// 'middleware' => 'jwt-auth',
+// 	'as' => 'Regrequest',
+// 	'uses' => 'ToiletController@create'
+// ]);
+
 Route::POST('requestReg/regToilet',[
 	// 'middleware' => 'jwt-auth',
 	'as' => 'Regrequest',
 	'uses' => 'ToiletController@requestReg'
 ]);
+
 Route::POST('register/addToilet',[
 	// 'middleware' => 'jwt-auth',
 	'as' => 'addToilet',
@@ -162,4 +169,16 @@ Route::GET('/toiletstats',[
 Route::POST('/requestClean',[
 	'as' => 'requestClean',
 	'uses' => 'ToiletController@requestClean'
+]);
+
+Route::POST('/addComment',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'addComment',
+	'uses' => 'ToiletController@addComment'
+]);
+
+Route::GET('/getComment',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'getComment',
+	'uses' => 'ToiletController@getComment'
 ]);
