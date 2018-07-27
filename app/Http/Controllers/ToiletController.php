@@ -65,7 +65,12 @@ class ToiletController extends Controller
             'disabled'   => 'required',
             'western'   => 'required',
             'indian'   => 'required',
-            'napkin'   => 'required'
+            'napkin'   => 'required',
+            'clean'  => 'required',
+            'maintenance'  => 'required',
+            'ambience'  => 'required',
+            'safety'  => 'required',
+            'water'  => 'required'
            // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
            // 'toilet_organisation' => 'required|min:5'
         ]);
@@ -145,6 +150,16 @@ class ToiletController extends Controller
                     $toiletdetails->indian=$request->get('indian');
                 if($request->napkin !=null)
                     $toiletdetails->napkin=$request->get('napkin');
+                if($request->clean != null)
+                    $toiletdetails->clean = $request->get('clean');
+                if($request->maintenance != null)
+                    $toiletdetails->maintenance = $request->get('maintenance');
+                if($request->ambience != null)
+                    $toiletdetails->ambience = $request->get('ambience');
+                if($request->safety != null)
+                    $toiletdetails->safety = $request->get('safety');
+                if($request->water != null)
+                    $toiletdetails->water = $request->get('water');
 
                 $toiletdetails->save();
                 $this->toilet_id = $toiletdetails->id; //keeping it -1 for new toilet
@@ -718,9 +733,39 @@ class ToiletController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request)
     {
         //
+
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Please Provide one Toilet");
+            return json_encode($data);
+        }
+        
+        $toiletdetails=MSDPToiletRegister::where(['id'=>$request->toilet_id])->first();
+        Log::info("data ".print_r($toiletdetails,true));
+        if($toiletdetails->count() >0)
+        {
+
+            $toiletdetails->free = $request->get('free');
+            $toiletdetails->men = $request->get('men');
+            $toiletdetails->women = $request->get('women');
+            $toiletdetails->disabled = $request->get('disabled');
+            $toiletdetails->western = $request->get('western');
+            $toiletdetails->indian = $request->get('indian');
+            $toiletdetails->napkin = $request->get('napkin');
+            $toiletdetails->dr_water = $request->get('dr_water');
+            
+            $toiletdetails->save();
+            // Log::info("data about toiletdetails".print_r($toiletdetails,true));
+            $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Edited Toilet details added");
+        }
+        else
+            $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
+        return json_encode($data);
     }
     /**
      * API for entering/updating feedback for specific toilet
@@ -1506,9 +1551,9 @@ class ToiletController extends Controller
             }    
         }
         catch(Exception $e){
-            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+            $data=array("status"=>"fail","data"=>0, "message"=>"Something went wrong in reporting the issue, please try again");
         }
-        $data=array("status"=>"success","data"=>null, "message"=>"No comment for this toilet");
+        $data=array("status"=>"success","data"=>0, "message"=>"No comment for this toilet");
         return json_encode($data); 
     }
 
