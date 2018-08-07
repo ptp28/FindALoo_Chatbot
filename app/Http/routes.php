@@ -66,7 +66,7 @@ Route::GET('auth/changePass',[
 */
 
 
-Route::POST('/giveGenFeedback',[
+Route::GET('/giveGenFeedback',[
 	'as' => 'giveGenFeedback',
 	'uses' => 'ToiletController@giveGenFeedback'
 ]);
@@ -92,6 +92,13 @@ Route::POST('register/addToilet',[
 	// 'middleware' => 'jwt-auth',
 	'as' => 'addToilet',
 	'uses' => 'ToiletController@create'
+]);
+
+
+Route::POST('/editFacilities',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'editFacilities',
+	'uses' => 'ToiletController@edit'
 ]);
 
 
@@ -182,3 +189,12 @@ Route::GET('/getComment',[
 	'as' => 'getComment',
 	'uses' => 'ToiletController@getComment'
 ]);
+
+Route::GET('/toiletActive',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'toiletActive',
+	'uses' => 'ToiletController@toiletActive'
+]);
+
+
+
