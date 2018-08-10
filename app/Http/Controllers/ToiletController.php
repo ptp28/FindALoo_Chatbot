@@ -1145,6 +1145,7 @@ class ToiletController extends Controller
             'toilet_id' => 'required',
         ]);
 
+
         if ($validator->fails()) {
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"incomplete request data");
             return json_encode($data);
@@ -1161,9 +1162,10 @@ class ToiletController extends Controller
             return json_encode($data);
         }
 
-        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
         $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->count();
+        Log::info("current toilet ".print_r($cur_toilet,true));
         if($cur_toilet==0 || is_null($cur_toilet)){
             $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
             return json_encode($data);
@@ -1174,6 +1176,7 @@ class ToiletController extends Controller
         DB::transaction(function() use ($request, $userid, $cur_toilet){
             
             $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+            Log::info("current toilet data ".print_r($cur_toilet,true));
             $cur_toilet->CLEAN_REQUEST = $cur_toilet->CLEAN_REQUEST+1;
             if(!$cur_toilet->save()){
                 $data=array("status"=>"fail","data"=>null, "message"=>"Request could not be made for cleaning the toilet");
