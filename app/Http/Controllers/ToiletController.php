@@ -1173,7 +1173,7 @@ class ToiletController extends Controller
 
     
         
-        DB::transaction(function() use ($request, $userid, $cur_toilet){
+        DB::transaction(function() use ($request, $user, $cur_toilet){
             
             $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
             Log::info("current toilet data ".print_r($cur_toilet,true));
