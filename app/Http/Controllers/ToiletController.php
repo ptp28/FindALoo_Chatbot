@@ -151,7 +151,7 @@ class ToiletController extends Controller
                 if($request->napkin !=null)
                     $toiletdetails->napkin=$request->get('napkin');
                 if($request->clean != null)
-                    $toiletdetails->clean = $request->get('clean');
+                    $toiletdetails->cleanliness = $request->get('clean');
                 if($request->maintenance != null)
                     $toiletdetails->maintenance = $request->get('maintenance');
                 if($request->ambience != null)
@@ -747,7 +747,7 @@ class ToiletController extends Controller
         
         $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
 
-        // Log::info("data ".print_r($toiletdetails,true));
+        Log::info("Request data ".print_r($request->all(),true));
         $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
         Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
         if($toilet_count >0)
@@ -764,10 +764,10 @@ class ToiletController extends Controller
             
             $toiletdetails->save();
             // Log::info("data about toiletdetails".print_r($toiletdetails,true));
-            $data=array("status"=>"success","data"=>null, "message"=>"Edited Toilet details added. Refresh toilet to view changes");
+            $data=array("status"=>"success","data"=>0, "message"=>"Edited Toilet details added. Refresh toilet to view changes");
         }
         else
-            $data=array("status"=>"fail","data"=>null, "message"=>"invalid toilet id");
+            $data=array("status"=>"fail","data"=>0, "message"=>"invalid toilet id");
         return json_encode($data);
     }
     /**
