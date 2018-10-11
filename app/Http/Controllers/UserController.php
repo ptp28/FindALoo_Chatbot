@@ -88,7 +88,7 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->cc('jayantjnp@gmail.com')
+                ->cc('tusharshahsp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });
@@ -176,12 +176,12 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->cc('tusharshahsp@gmail.com')
-                ->subject('Registration: FindaLoo')
-                ->from('admin@e-yantra.org', 'e-Yantra IITB');
+                ->bcc('findaloo.eyantra@gmail.com')
+                ->subject('Registered Succesfully: FindaLoo')
+                ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
             });          
         });//end of transaction
-        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! A confirmation email has been sent to your registered email id");
+        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! An aknowledgement email has been sent to your registered email id");
         //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
         return json_encode($data);
     }//end of create

@@ -47,9 +47,9 @@ class ToiletController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request){
+    public function requestReg(Request $request){
 
-        Log::info("datat ".print_r($request->all(), true));
+        // Log::info("datat ".print_r($request->all(), true));
 
         $validator = Validator::make($request->all(), [
             'toilet_lat' => 'required|min:5',
@@ -82,9 +82,9 @@ class ToiletController extends Controller
         }
 
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
-        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        Log::info("request data 1".print_r($request->all(),true));
+        Log::info("datacxcxcxcx ".print_r($user,true));
+        $userdetail=UserRegister::where(['email'=>$user->username])->first();//getting user_id
+        Log::info("request data 1".print_r($userdetail,true));
         // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         // $userRole=$user->role;//getting user role
         // if($userRole!=1 && $userRole!=2)
@@ -95,7 +95,7 @@ class ToiletController extends Controller
         
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
          try{
-            $exception=DB::transaction(function() use ($request, $userid){
+            $exception=DB::transaction(function() use ($request, $userdetail){
                 
                 
                 // Log::info("Request Data ".print_r($request,true));
@@ -117,7 +117,7 @@ class ToiletController extends Controller
                 $toiletdetails=new MSDPToiletRegister;
                 $toiletdetails->lat=$request->get('toilet_lat');
                 $toiletdetails->lng=$request->get('toilet_lng');
-                $toiletdetails->USERID=$userid;
+                $toiletdetails->USERID=$userdetail->id;
                 if($request->toilet_name!=null)
                     $toiletdetails->NAME=$request->get('toilet_name');
                 if($request->toilet_address!=null)
@@ -126,7 +126,7 @@ class ToiletController extends Controller
                     $toiletdetails->ORGNAME=$request->get('toilet_organisation');
                 if($request->toilet_ownership!=null)
                     $toiletdetails->OWNERSHIP=$request->get('toilet_ownership');
-                $toiletdetails->ACTIVE=1;
+                $toiletdetails->ACTIVE=0;
                 if($request->time_open !=null)
                     $toiletdetails->time_open=$request->get('time_open');
                 if($request->time_close !=null)
@@ -160,18 +160,49 @@ class ToiletController extends Controller
                     $toiletdetails->safety = $request->get('safety');
                 if($request->water != null)
                     $toiletdetails->water = $request->get('water');
-
+                $token = str_random(50);
+                $toiletdetails->token = $token;
                 $toiletdetails->save();
                 $this->toilet_id = $toiletdetails->id; //keeping it -1 for new toilet
+                
+
                 $toiletdetails->OBJECTID = $toiletdetails->id;
-                 $toiletdetails->save();
+                $toiletdetails->save();
+
+
+                $toiletFeedback=new ToiletFeedback();
+                $toiletFeedback->user_id=$userdetail->id;
+                $toiletFeedback->toilet_id=$toiletdetails->id;
+                $toiletFeedback->cleanliness=$toiletdetails->cleanliness;
+                $toiletFeedback->maintenance=$toiletdetails->maintenance;
+                $toiletFeedback->ambience=$toiletdetails->ambience;
+                $toiletFeedback->safety=$toiletdetails->safety;
+                $toiletFeedback->water= $toiletdetails->water;
+                if($request->toilet_comment!=null)
+                    $toiletFeedback->comment=$request->toilet_comment;
+                $toiletFeedback->save();
+
+               
+                if($toiletFeedback->save())
+                {
+                     Mail::queue('email.activate', [ 'token' => $token, 'active' => '1', 'toilet' => $toiletdetails, 'user' => $userdetail], function($message)
+                    {
+                        
+                        $message
+                        ->to('rathin.iitb@gmail.com')
+                        ->cc('tusharshahsp@gmail.com')
+                        ->subject('New Toilet Added: FindaLoo')
+                        ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                    });
+
+                } 
                     //add provision for sending issue to admin
-                });//transaction ends here
+            });//transaction ends here
 
                 
-                if(is_null($exception)){
-                    $data=array("status"=>"success","data"=>$this->toilet_id, "message"=>"Toilet Added");
-                }
+            if(is_null($exception)){
+                $data=array("status"=>"success","data"=>$this->toilet_id, "message"=>"Toilet Added");
+            }
 
         }
         catch(Exception $e){
@@ -188,101 +219,141 @@ class ToiletController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function requestReg(Request $request){
-        Log::info("reached request");
-        $validator = Validator::make($request->all(), [
-            'toilet_lat' => 'required|min:5',
-            'toilet_lng' => 'required|min:5',
-            'toilet_name' => 'required',
-            'g_user_id'   => 'required',
-            'time_open'   => 'required',
-            'time_close'   => 'required',
-            'free'   => 'required',
-            'dr_water'   => 'required',
-            'men'   => 'required',
-            'women'   => 'required',
-            'disabled'   => 'required',
-            'western'   => 'required',
-            'indian'   => 'required',
-            'napkin'   => 'required'
-                       // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
-           // 'toilet_organisation' => 'required|min:5'
-        ]);
-        $toilet_id = -1;
+        // public function requestReg(Request $request){
 
-        if ($validator->fails()) {
-            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Toilet Registration failed");
-            return json_encode($data);
-        }
+        //     Log::info("datat ".print_r($request->all(), true));
 
-        $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
-        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        //     $validator = Validator::make($request->all(), [
+        //         'toilet_lat' => 'required|min:5',
+        //         'toilet_lng' => 'required|min:5',
+        //         'toilet_name' => 'required',
+        //         'g_user_id'   => 'required',
+        //         'time_open'   => 'required',
+        //         'time_close'   => 'required',
+        //         'free'   => 'required',
+        //         'dr_water'   => 'required',
+        //         'men'   => 'required',
+        //         'women'   => 'required',
+        //         'disabled'   => 'required',
+        //         'western'   => 'required',
+        //         'indian'   => 'required',
+        //         'napkin'   => 'required',
+        //         'clean'  => 'required',
+        //         'maintenance'  => 'required',
+        //         'ambience'  => 'required',
+        //         'safety'  => 'required',
+        //         'water'  => 'required'
+        //        // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
+        //        // 'toilet_organisation' => 'required|min:5'
+        //     ]);
+        //     $toilet_id = -1;
 
-        // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
-        // $userRole=$user->role;//getting user role
-        // if($userRole!=1 && $userRole!=2)
-        // {
-        //     $data=array("status"=>"fail","data"=>null, "message"=>"Only Admin or Moderator can register new toilet place");
+        //     if ($validator->fails()) {
+        //         $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Toilet Registration failed");
+        //         return json_encode($data);
+        //     }
+
+        //     $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
+        //     Log::info("data ".print_r($user,true));
+        //     $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        //     Log::info("request data 1".print_r($request->all(),true));
+        //     // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
+        //     // $userRole=$user->role;//getting user role
+        //     // if($userRole!=1 && $userRole!=2)
+        //     // {
+        //     //     $data=array("status"=>"fail","data"=>null, "message"=>"Only Admin or Moderator can register new toilet place");
+        //     //     return json_encode($data);
+        //     // }
+            
+        //     // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        //      try{
+        //         $exception=DB::transaction(function() use ($request, $userid){
+                    
+                    
+        //             // Log::info("Request Data ".print_r($request,true));
+
+        //         // $toiletdetails=new ToiletRegister;
+        //         // $toiletdetails->lat=$request->toilet_lat;
+        //         // $toiletdetails->lng=$request->toilet_lng;
+        //         // $toiletdetails->user_id=$userid;
+        //         // if($request->toilet_ward!=null)
+        //         //     $toiletdetails->ward=$request->toilet_ward;
+        //         // if($request->toilet_address!=null)
+        //         //     $toiletdetails->address=$request->toilet_address;
+        //         // if($request->toilet_organisation!=null)
+        //         //     $toiletdetails->organisation=$request->toilet_organisation;
+        //         // if($request->toilet_ownership!=null)
+        //         //     $toiletdetails->ownership=$request->toilet_ownership;
+        //         // $toiletdetails->save();
+        //             Log::info("request data inside controller ".print_r($request->all(), true));
+        //             $toiletdetails=new MSDPToiletRegister;
+        //             $toiletdetails->lat=$request->get('toilet_lat');
+        //             $toiletdetails->lng=$request->get('toilet_lng');
+        //             $toiletdetails->user_id=$userid;
+        //             if($request->toilet_name!=null)
+        //                 $toiletdetails->NAME=$request->get('toilet_name');
+        //             if($request->toilet_address!=null)
+        //                 $toiletdetails->ADDRESS=$request->get('toilet_address');
+        //             if($request->toilet_organisation!=null)
+        //                 $toiletdetails->ORGNAME=$request->get('toilet_organisation');
+        //             if($request->toilet_ownership!=null)
+        //                 $toiletdetails->OWNERSHIP=$request->get('toilet_ownership');
+        //             $toiletdetails->ACTIVE=1;
+        //             if($request->time_open !=null)
+        //                 $toiletdetails->time_open=$request->get('time_open');
+        //             if($request->time_close !=null)
+        //             {
+        //                 $toiletdetails->time_close=$request->get('time_close');
+        //                 Log::info("datat ".$request->get('time_close'));
+        //             }
+        //             if($request->free !=null)
+        //                 $toiletdetails->free=$request->get('free');
+        //             if($request->dr_water !=null)
+        //                 $toiletdetails->dr_water=$request->get('dr_water');
+        //             if($request->men !=null)
+        //                 $toiletdetails->men=$request->get('men');
+        //             if($request->women !=null)
+        //                 $toiletdetails->women=$request->get('women');
+        //             if($request->disabled !=null)
+        //                 $toiletdetails->disabled=$request->get('disabled');
+        //             if($request->western !=null)
+        //                 $toiletdetails->western=$request->get('western');
+        //             if($request->indian !=null)
+        //                 $toiletdetails->indian=$request->get('indian');
+        //             if($request->napkin !=null)
+        //                 $toiletdetails->napkin=$request->get('napkin');
+        //             if($request->clean != null)
+        //                 $toiletdetails->cleanliness = $request->get('clean');
+        //             if($request->maintenance != null)
+        //                 $toiletdetails->maintenance = $request->get('maintenance');
+        //             if($request->ambience != null)
+        //                 $toiletdetails->ambience = $request->get('ambience');
+        //             if($request->safety != null)
+        //                 $toiletdetails->safety = $request->get('safety');
+        //             if($request->water != null)
+        //                 $toiletdetails->water = $request->get('water');
+
+        //             $toiletdetails->save();
+        //             $this->toilet_id = $toiletdetails->id; //keeping it -1 for new toilet
+        //             $toiletdetails->OBJECTID = $toiletdetails->id;
+        //              $toiletdetails->save();
+        //                 //add provision for sending issue to admin
+        //             });//transaction ends here
+
+                    
+        //             if(is_null($exception)){
+        //                 $data=array("status"=>"success","data"=>$this->toilet_id, "message"=>"Toilet Added");
+        //             }
+
+        //     }
+        //     catch(Exception $e){
+        //         $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong adding new toilet, please try again");
+        //     }
+
+        //  // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
+        //     $data=array("status"=>"success","data"=>$this->toilet_id, "message"=>"Thank you for registering the new Toilet! It will be visible on the map after verification");
         //     return json_encode($data);
-        // }
-        
-        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        try{
-            $exception=DB::transaction(function() use ($request, $userid){
-                
-                
-                $toiletdetails=new MSDPToiletRegister();
-                $toiletdetails->lat=$request->toilet_lat;
-                $toiletdetails->lng=$request->toilet_lng;
-                $toiletdetails->user_id=$userid;
-                if($request->toilet_name!=null)
-                    $toiletdetails->name=$request->toilet_name;
-                if($request->toilet_address!=null)
-                    $toiletdetails->address=$request->toilet_address;
-                if($request->toilet_organisation!=null)
-                    $toiletdetails->orgname=$request->toilet_organisation;
-                if($request->toilet_ownership!=null)
-                    $toiletdetails->ownership=$request->toilet_ownership;
-                if($request->time_open !=null)
-                    $toiletdetails->time_open=$request->time_open;
-                if($request->time_close !=null)
-                    $toiletdetails->time_close=$request->time_close;
-                if($request->money !=null)
-                    $toiletdetails->free=$request->free;
-                if($request->drinking_water !=null)
-                    $toiletdetails->dr_water=$request->dr_water;
-                if($request->male !=null)
-                    $toiletdetails->men=$request->men;
-                if($request->female !=null)
-                    $toiletdetails->women=$request->women;
-                if($request->disabled !=null)
-                    $toiletdetails->disabled=$request->disabled;
-                if($request->western !=null)
-                    $toiletdetails->western=$request->western;
-                if($request->indian !=null)
-                    $toiletdetails->indian=$request->indian;
-                if($request->napkin !=null)
-                    $toiletdetails->napkin=$request->napkin;
-                // $this->toilet_id = -1; //keeping it -1 for new toilet
-                    //add provision for sending issue to admin
-                });//transaction ends here
-
-                
-                if(is_null($exception)){
-                    $data=array("status"=>"success","data"=>$toilet_id, "message"=>"Toilet Added");
-                }
-
-        }
-        catch(Exception $e){
-            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong adding new toilet, please try again");
-            return json_encode($data);
-        }
-
-     // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
-        $data=array("status"=>"success","data"=>$toilet_id, "message"=>"Thank you for registering the new Toilet! It will be visible on the map after verification");
-        return json_encode($data);
-    }//end of create
+        // }//end of create
     /**
      * Store a newly created resource in storage.
      *
@@ -770,6 +841,44 @@ class ToiletController extends Controller
             $data=array("status"=>"fail","data"=>0, "message"=>"invalid toilet id");
         return json_encode($data);
     }
+
+
+    /**
+     * Show the form for editing the specified time.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function editTime(Request $request)
+    {
+        //
+
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Please Provide one Toilet");
+            return json_encode($data);
+        }
+        
+        $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
+
+        Log::info("Request data ".print_r($request->all(),true));
+        $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
+        Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
+        if($toilet_count >0)
+        {
+
+            $toiletdetails->time_open = $request->get('time_open');
+            $toiletdetails->time_close = $request->get('time_close');            
+            $toiletdetails->save();
+            // Log::info("data about toiletdetails".print_r($toiletdetails,true));
+            $data=array("status"=>"success","data"=>0, "message"=>"Request Toilet Timings updated. Refresh toilet to view changes");
+        }
+        else
+            $data=array("status"=>"fail","data"=>0, "message"=>"invalid toilet id");
+        return json_encode($data);
+    }
     /**
      * API for entering/updating feedback for specific toilet
      *
@@ -1207,24 +1316,49 @@ class ToiletController extends Controller
         }
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
         Log::info("data ".print_r($user,true));
-        $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
+        $userdetail=UserRegister::where(['email'=>$user->username])->first();//getting user_id
         
         try{
-            $exception =DB::transaction(function() use ($request, $userid){
+            $exception =DB::transaction(function() use ($request, $userdetail){
                 if($request->active!=null){
-                    $toiletPhoto= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
-                    $toiletPhoto->active=$request->active;
-                    $toiletPhoto->save();
+
+                    $token = str_random(50);
+                    $toiletdetails= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
+                    $toiletdetails->token = $token;
+                    $toiletdetails->save();
+                    if($request->active == 1){
+                        Mail::queue('email.activate', [ 'token' => $token, 'active' => '1', 'toilet' => $toiletdetails, 'user' => $userdetail], function($message)
+                        {
+                            
+                            $message
+                            ->to('rathin.iitb@gmail.com')
+                            ->bcc('tusharshahsp@gmail.com')
+                            ->subject('Toilet Add Request: FindaLoo')
+                            ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                        });
+                    }
+                    elseif ($request->active == 0) {
+                        Mail::queue('email.deactivate', [ 'token' => $token, 'active' => '0', 'toilet' => $toiletdetails, 'user' => $userdetail], function($message)
+                        {
+                            
+                            $message
+                            ->to('rathin.iitb@gmail.com')
+                            ->bcc('tusharshahsp@gmail.com')
+                            ->subject('Toilet Remove Request: FindaLoo')
+                            ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                        });
+                    }
                 }  
             });//transaction ends here
             if(is_null($exception)){
-                    $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your feedback");
+                    $data=array("status"=>"success","data"=>null, "message"=>"Toilet will be updated shortly after verification");
             }
         }
         catch(Exception $e){
-            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in reporting the issue, please try again");
+            $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in updating the toilet status, please try again");
+            DB::rollback();
         }
-        $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your feedback");
+        $data=array("status"=>"success","data"=>null, "message"=>"Toilet will be updated shortly after verification");
         return json_encode($data);
       
     }

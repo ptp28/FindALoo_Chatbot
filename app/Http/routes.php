@@ -58,6 +58,16 @@ Route::GET('auth/changePass',[
 ]);
 
 
+
+Route::GET('/updateToilet/{token}/{id}/{active}',[
+	'as' => 'updateToilet',
+	'uses' => 'AdminController@updateToilet'
+]);
+
+// Route::GET('/deactivateToilet/{token}',[
+// 	'as' => 'deactivateToilet',
+// 	'uses' => 'AdminController@deactivateToilet'
+// ]);
 /*Route::POST('auth/getAuthenticatedUser',[
 	'middleware' => 'jwt-auth',
 	'as' => 'getAuthenticatedUser',
@@ -91,7 +101,7 @@ Route::POST('requestReg/regToilet',[
 Route::POST('register/addToilet',[
 	// 'middleware' => 'jwt-auth',
 	'as' => 'addToilet',
-	'uses' => 'ToiletController@create'
+	'uses' => 'ToiletController@requestReg'
 ]);
 
 
