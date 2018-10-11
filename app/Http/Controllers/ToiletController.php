@@ -192,7 +192,7 @@ class ToiletController extends Controller
                         ->to('rathin.iitb@gmail.com')
                         ->cc('tusharshahsp@gmail.com')
                         ->subject('New Toilet Added: FindaLoo')
-                        ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                        ->from('admin@e-yantra.org', 'e-Yantra IITB');
                     });
 
                 } 
@@ -1334,7 +1334,7 @@ class ToiletController extends Controller
                             ->to('rathin.iitb@gmail.com')
                             ->bcc('tusharshahsp@gmail.com')
                             ->subject('Toilet Add Request: FindaLoo')
-                            ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                            ->from('admin@e-yantra.org', 'e-Yantra IITB');
                         });
                     }
                     elseif ($request->active == 0) {
@@ -1345,7 +1345,7 @@ class ToiletController extends Controller
                             ->to('rathin.iitb@gmail.com')
                             ->bcc('tusharshahsp@gmail.com')
                             ->subject('Toilet Remove Request: FindaLoo')
-                            ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                            ->from('admin@e-yantra.org', 'e-Yantra IITB');
                         });
                     }
                 }  
