@@ -112,6 +112,18 @@ Route::POST('/editFacilities',[
 ]);
 
 
+Route::POST('/editTimeOpen',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'editTime',
+	'uses' => 'ToiletController@editTimeOpen'
+]);
+
+Route::POST('/editTimeClose',[
+	// 'middleware' => 'jwt-auth',
+	'as' => 'editTime',
+	'uses' => 'ToiletController@editTimeClose'
+]);
+
 
 
 Route::GET('/showToilets',[

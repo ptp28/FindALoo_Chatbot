@@ -424,7 +424,7 @@ class ToiletController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_lat' => 'required|min:5',
-            'user_lng' => 'required|min:5'
+            'user_lng' => 'required|min:5' 
         ]);
         if ($validator->fails()) {
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"wrong request");
@@ -844,17 +844,18 @@ class ToiletController extends Controller
 
 
     /**
-     * Show the form for editing the specified time.
+     * Show the form for editing the specified open time.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function editTime(Request $request)
+    public function editTimeOpen(Request $request)
     {
         //
 
         $validator = Validator::make($request->all(), [
-            'toilet_id' => 'required'
+            'toilet_id' => 'required',
+            'time_open' => 'required'
         ]);
         if ($validator->fails()) {
             $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Please Provide one Toilet");
@@ -869,7 +870,42 @@ class ToiletController extends Controller
         if($toilet_count >0)
         {
 
-            $toiletdetails->time_open = $request->get('time_open');
+            $toiletdetails->time_open = $request->get('time_open');           
+            $toiletdetails->save();
+            // Log::info("data about toiletdetails".print_r($toiletdetails,true));
+            $data=array("status"=>"success","data"=>0, "message"=>"Request Toilet Timings updated. Refresh toilet to view changes");
+        }
+        else
+            $data=array("status"=>"fail","data"=>0, "message"=>"invalid toilet id");
+        return json_encode($data);
+    }
+    /**
+     * Show the form for editing the specified close time.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function editTimeClose(Request $request)
+    {
+        //
+
+        $validator = Validator::make($request->all(), [
+            'toilet_id' => 'required',
+            'time_close' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $data=array("status"=>"fail","data"=>$validator->errors(), "message"=>"Please Provide one Toilet");
+            return json_encode($data);
+        }
+        
+        $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
+
+        Log::info("Request data ".print_r($request->all(),true));
+        $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
+        Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
+        if($toilet_count >0)
+        {
+            
             $toiletdetails->time_close = $request->get('time_close');            
             $toiletdetails->save();
             // Log::info("data about toiletdetails".print_r($toiletdetails,true));
@@ -1034,7 +1070,7 @@ class ToiletController extends Controller
                 if($request->toilet_comment!=null)
                     $toiletFeedback->comment=$request->toilet_comment;
                 $toiletFeedback->save();
-                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
+                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count()+1;
                 //$ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
                 $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount+$request->toilet_cleanliness)/($feedbackCount+1);
                 $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount+$request->toilet_maintenance)/($feedbackCount+1);
