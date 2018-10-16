@@ -178,7 +178,7 @@ class UserController extends Controller
                 ->to($user_email)
                 ->bcc('findaloo.eyantra@gmail.com')
                 ->subject('Registered Succesfully: FindaLoo')
-                ->from('findaloo.eyantra@gmail.com', 'e-Yantra IITB');
+                ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });          
         });//end of transaction
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! An aknowledgement email has been sent to your registered email id");

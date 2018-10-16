@@ -1476,7 +1476,7 @@ class ToiletController extends Controller
         
 
          if($request->criteria==4){
-            $toiletdetails=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE ACTIVE = 0') ;
+            $toiletdetails=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE ACTIVE = 0')->get() ;
             log::info("number of toilets ".print_r($toiletdetails,true));
             if(sizeof($toiletdetails)>0)
             {
