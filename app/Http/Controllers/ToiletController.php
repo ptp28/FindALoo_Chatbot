@@ -162,6 +162,17 @@ class ToiletController extends Controller
                     $toiletdetails->water = $request->get('water');
                 $token = str_random(50);
                 $toiletdetails->token = $token;
+
+
+                $toiletdetails->CONDITION_RAW=($toiletdetails->CLEANLINESS+$toiletdetails->MAINTENANCE+$toiletdetails->AMBIENCE+$toiletdetails->SAFETY+$toiletdetails->WATER)/5;
+                if($toiletdetails->CONDITION_RAW<=2.33 && $toiletdetails->CONDITION_RAW>=0)
+                    $toiletdetails->CONDITION='Poor';
+                else if($toiletdetails->CONDITION_RAW>2.33 && $toiletdetails->CONDITION_RAW<=3.66)
+                    $toiletdetails->CONDITION='Moderate';
+                else  if($toiletdetails->CONDITION_RAW>3.66)
+                    $toiletdetails->CONDITION='Good';
+
+
                 $toiletdetails->save();
                 $this->toilet_id = $toiletdetails->id; //keeping it -1 for new toilet
                 
@@ -183,6 +194,8 @@ class ToiletController extends Controller
                 $toiletFeedback->save();
 
                
+
+
                 if($toiletFeedback->save())
                 {
                      Mail::queue('email.activate', [ 'token' => $token, 'active' => '1', 'toilet' => $toiletdetails, 'user' => $userdetail], function($message)
@@ -905,7 +918,6 @@ class ToiletController extends Controller
         Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
         if($toilet_count >0)
         {
-            
             $toiletdetails->time_close = $request->get('time_close');            
             $toiletdetails->save();
             // Log::info("data about toiletdetails".print_r($toiletdetails,true));
