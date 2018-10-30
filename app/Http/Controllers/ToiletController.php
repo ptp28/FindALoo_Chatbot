@@ -1020,7 +1020,7 @@ class ToiletController extends Controller
             $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
             return json_encode($data);
         }
-        $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
+        $checkUser=ToiletFeedback::where('toilet_id',$request->toilet_id)->where('user_id',$userid)->count();
         // $toiletdetails=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             // return $toiletdetails;
         
@@ -1052,8 +1052,8 @@ class ToiletController extends Controller
                 Log::info("rating value for new".$ratings->CONDITION_RAW);
             }
             else{//rediting the old feedback
-                $toiletFeedback=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->first();//get previous rating from the user
-
+                $toiletFeedback=ToiletFeedback::where('toilet_id',$request->toilet_id)->where('user_id',$userid)->first();//get previous rating from the user
+                Log::info("toilet data".print_r($toiletFeedback,true));
                 $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();//finding the count of feedbacks
                 $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount-$toiletFeedback->cleanliness+$request->toilet_cleanliness)/($feedbackCount);//readjusting the average
                 $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount-$toiletFeedback->maintenance+$request->toilet_maintenance)/($feedbackCount);
