@@ -49,7 +49,6 @@ class ToiletController extends Controller
      */
     public function requestReg(Request $request){
 
-        // Log::info("datat ".print_r($request->all(), true));
 
         $validator = Validator::make($request->all(), [
             'toilet_lat' => 'required|min:5',
@@ -71,9 +70,8 @@ class ToiletController extends Controller
             'ambience'  => 'required',
             'safety'  => 'required',
             'water'  => 'required'
-           // 'toilet_address' => 'required|digits:10|unique:User_Register,contact',
-           // 'toilet_organisation' => 'required|min:5'
         ]);
+
         $toilet_id = -1;
 
         if ($validator->fails()) {
@@ -82,38 +80,13 @@ class ToiletController extends Controller
         }
 
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("datacxcxcxcx ".print_r($user,true));
+
         $userdetail=UserRegister::where(['email'=>$user->username])->first();//getting user_id
-        Log::info("request data 1".print_r($userdetail,true));
-        // $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
-        // $userRole=$user->role;//getting user role
-        // if($userRole!=1 && $userRole!=2)
-        // {
-        //     $data=array("status"=>"fail","data"=>null, "message"=>"Only Admin or Moderator can register new toilet place");
-        //     return json_encode($data);
-        // }
         
-        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
          try{
             $exception=DB::transaction(function() use ($request, $userdetail){
                 
                 
-                // Log::info("Request Data ".print_r($request,true));
-
-            // $toiletdetails=new ToiletRegister;
-            // $toiletdetails->lat=$request->toilet_lat;
-            // $toiletdetails->lng=$request->toilet_lng;
-            // $toiletdetails->user_id=$userid;
-            // if($request->toilet_ward!=null)
-            //     $toiletdetails->ward=$request->toilet_ward;
-            // if($request->toilet_address!=null)
-            //     $toiletdetails->address=$request->toilet_address;
-            // if($request->toilet_organisation!=null)
-            //     $toiletdetails->organisation=$request->toilet_organisation;
-            // if($request->toilet_ownership!=null)
-            //     $toiletdetails->ownership=$request->toilet_ownership;
-            // $toiletdetails->save();
-                Log::info("request data inside controller ".print_r($request->all(), true));
                 $toiletdetails=new MSDPToiletRegister;
                 $toiletdetails->lat=$request->get('toilet_lat');
                 $toiletdetails->lng=$request->get('toilet_lng');
@@ -164,7 +137,12 @@ class ToiletController extends Controller
                 $toiletdetails->token = $token;
 
 
-                $toiletdetails->CONDITION_RAW=($toiletdetails->CLEANLINESS+$toiletdetails->MAINTENANCE+$toiletdetails->AMBIENCE+$toiletdetails->SAFETY+$toiletdetails->WATER)/5;
+                $toiletdetails->CONDITION_RAW = $c =($toiletdetails->cleanliness +$toiletdetails->maintenance + $toiletdetails->ambience + $toiletdetails->safety + $toiletdetails->water)/5;
+                $b=($toiletdetails->cleanliness +$toiletdetails->maintenance + $toiletdetails->ambience + $toiletdetails->safety + $toiletdetails->water)/5;
+
+                Log::info("data info about toilet rating c ".$c);
+                Log::info("data info about toilet rating b ".$b);
+                Log::info("data info about toilet rating toilet rating ".$toiletdetails->CONDITION_RAW);
                 if($toiletdetails->CONDITION_RAW<=2.33 && $toiletdetails->CONDITION_RAW>=0)
                     $toiletdetails->CONDITION='Poor';
                 else if($toiletdetails->CONDITION_RAW>2.33 && $toiletdetails->CONDITION_RAW<=3.66)
@@ -222,7 +200,6 @@ class ToiletController extends Controller
             $data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong adding new toilet, please try again");
         }
 
-     // return redirect('register')->with('success','Thank you for registering! A confirmation email has been sent to each team member. Each team member should click on the Activation link to activate their account. Follow the validation instructions as specified in confirmation e-mail to complete the registration process.');
         $data=array("status"=>"success","data"=>$this->toilet_id, "message"=>"Thank you for registering the new Toilet! It will be visible on the map after verification");
         return json_encode($data);
     }//end of create
@@ -375,7 +352,7 @@ class ToiletController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
     }
 
     /**
@@ -456,22 +433,9 @@ class ToiletController extends Controller
             $count=$request->count;
         $user_lat=$request->user_lat;
         $user_lng=$request->user_lng;
-         //
-        // $user = JWTAuth::parseToken()->authenticate();
-        // if($user->role==3)//list toilets for admin
-        // {
-        //     // $toiletdetails = ToiletRegister::all();
-        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
-        //     // return json_encode($data);
-        // }
-        // if($user->role==2)//list toilets for moderaters
-        // {
-        //     // $toiletdetails = ToiletRegister::all();
-        //     // $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet data fetched");
-        //     // return json_encode($data);
-        // }
+         
         $toiletdetails=DB::select('SELECT OBJECTID, NAME,lat,lng, MSDPUSERToilet_Block.CONDITION, CONDITION_RAW, ACTIVE, address, ( 6371 * acos( cos( radians(:user_lat1) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians(:user_lng) ) + sin( radians(:user_lat2) ) * sin( radians( lat ) ) ) ) AS distance FROM MSDPUSERToilet_Block WHERE ACTIVE = 1 HAVING distance < :rad order by distance asc limit :count',['user_lat1'=>$user_lat,'user_lat2'=>$user_lat,'user_lng'=>$user_lng,'rad'=>$rad, 'count'=>$count]) ;
-        log::info("number of toilets ".print_r($toiletdetails,true));
+        
         if(sizeof($toiletdetails)>0)
         {
             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -568,16 +532,16 @@ class ToiletController extends Controller
         }
         
         $toiletdetails=MSDPToiletRegister::where(['id'=>$request->toilet_id])->get();
-        Log::info("data ".print_r($toiletdetails,true));
+        
         if(sizeof($toiletdetails)>0)
         {
             $toiletdetails=$toiletdetails[0];
             $toiletphoto=ToiletImages::where('toilet_id',$request->toilet_id)->select('user_id','image_name','image_title','created_at')->get();
-           //$toiletphoto=$toiletphoto[0];
+           
             $ratingsCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
             $toiletdetails->toilet_image=$toiletphoto;
             $toiletdetails->ratingsCount=$ratingsCount;
-            // Log::info("data about toiletdetails".print_r($toiletdetails,true));
+            
             $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilet details fetched");
         }
         else
@@ -638,7 +602,7 @@ class ToiletController extends Controller
     {
         $user = JWTAuth::parseToken()->authenticate();//finding the user from the token
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-        // $visits = ToiletVisits::where(['user_id'=>$userid])->get();
+        
         $visits = DB::table('Toilet_Visits')
         ->join('MSDPUSERToilet_Block','Toilet_Visits.toilet_id','=','MSDPUSERToilet_Block.OBJECTID')
         ->select('Toilet_Visits.id','Toilet_Visits.user_id','MSDPUSERToilet_Block.OBJECTID','MSDPUSERToilet_Block.NAME','MSDPUSERToilet_Block.ADDRESS','Toilet_Visits.created_at')
@@ -687,17 +651,13 @@ class ToiletController extends Controller
 
 
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+        
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
         
 
         $checkUser=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->count();
-        // $user = JWTAuth::parseToken()->authenticate();//finding the username from the token
-        // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
-
-        //$data=array("status"=>"fail","data"=>null, "message"=>"Something went wrong in storing history");
-
+        
         try{
             $exception=DB::transaction(function() use ($request, $userid){
                 $issue=new ReportIssues;
@@ -831,9 +791,8 @@ class ToiletController extends Controller
         
         $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
 
-        Log::info("Request data ".print_r($request->all(),true));
         $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
-        Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
+        
         if($toilet_count >0)
         {
 
@@ -877,15 +836,14 @@ class ToiletController extends Controller
         
         $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
 
-        Log::info("Request data ".print_r($request->all(),true));
         $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
-        Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
+        
         if($toilet_count >0)
         {
 
             $toiletdetails->time_open = $request->get('time_open');           
             $toiletdetails->save();
-            // Log::info("data about toiletdetails".print_r($toiletdetails,true));
+          
             $data=array("status"=>"success","data"=>0, "message"=>"Request Toilet Timings updated. Refresh toilet to view changes");
         }
         else
@@ -913,9 +871,9 @@ class ToiletController extends Controller
         
         $toiletdetails=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->first();
 
-        Log::info("Request data ".print_r($request->all(),true));
+        
         $toilet_count=MSDPToiletRegister::where(['OBJECTID'=>$request->toilet_id])->count();
-        Log::info("inside_editfacility count ".$toilet_count." toiletdetails : ".print_r($toiletdetails, true));
+       
         if($toilet_count >0)
         {
             $toiletdetails->time_close = $request->get('time_close');            
@@ -1053,7 +1011,7 @@ class ToiletController extends Controller
             return json_encode($data);
         }
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+       
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
         $ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
@@ -1082,7 +1040,7 @@ class ToiletController extends Controller
                 if($request->toilet_comment!=null)
                     $toiletFeedback->comment=$request->toilet_comment;
                 $toiletFeedback->save();
-                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count()+1;
+                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();
                 //$ratings=MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
                 $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount+$request->toilet_cleanliness)/($feedbackCount+1);
                 $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount+$request->toilet_maintenance)/($feedbackCount+1);
@@ -1091,11 +1049,12 @@ class ToiletController extends Controller
                 $ratings->WATER=($ratings->WATER*$feedbackCount+$request->toilet_water)/($feedbackCount+1);
                 //}
                 $ratings->CONDITION_RAW=($ratings->CLEANLINESS+$ratings->MAINTENANCE+$ratings->AMBIENCE+$ratings->SAFETY + $ratings->WATER)/5;//overall rating is average all three subratings
+                Log::info("rating value for new".$ratings->CONDITION_RAW);
             }
             else{//rediting the old feedback
                 $toiletFeedback=ToiletFeedback::where(['toilet_id'=>$request->toilet_id, 'user_id'=>$userid])->first();//get previous rating from the user
 
-                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count()+1;//finding the count of feedbacks
+                $feedbackCount=ToiletFeedback::where('toilet_id',$request->toilet_id)->count();//finding the count of feedbacks
                 $ratings->CLEANLINESS=($ratings->CLEANLINESS*$feedbackCount-$toiletFeedback->cleanliness+$request->toilet_cleanliness)/($feedbackCount);//readjusting the average
                 $ratings->MAINTENANCE=($ratings->MAINTENANCE*$feedbackCount-$toiletFeedback->maintenance+$request->toilet_maintenance)/($feedbackCount);
                 $ratings->AMBIENCE=($ratings->AMBIENCE*$feedbackCount-$toiletFeedback->ambience+$request->toilet_ambience)/($feedbackCount);
@@ -1111,6 +1070,7 @@ class ToiletController extends Controller
                 if($request->toilet_comment!=null)
                     $toiletFeedback->comment=$request->toilet_comment;
                 $toiletFeedback->save();
+                Log::info("rating value for old".$ratings->CONDITION_RAW);
 
             }
             
@@ -1123,7 +1083,7 @@ class ToiletController extends Controller
             $ratings->save();
         });//transaction ends here
 
-        Log::info("data the way you want");
+       
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for your Feedback");
         return json_encode($data);
       
@@ -1137,7 +1097,7 @@ class ToiletController extends Controller
      */
     public function upload(Request $request)
     {
-        Log::info("data ".print_r($request->all(),true));
+        
         $validator = Validator::make($request->all(), [
             'toiletPht' => 'required|image:jpg,jpeg,bmp,png',
             'toilet_id' => 'required',
@@ -1250,7 +1210,7 @@ class ToiletController extends Controller
 
         
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+       
         
         $user_count = Logins::where('g_user_id',$request->g_user_id)->count();
         if ($user_count <= 0) {
@@ -1267,7 +1227,7 @@ class ToiletController extends Controller
             $feedback->g_user_id = $request->g_user_id;
             if($feedback->save()){
                 
-                Log::info("data ".$user. "feedback".$feedback);
+               
                 Mail::queue('email.feedback_received', array('user' => $user->username,'feedback' => $feedback->user_feedback) , function($message) use($user, $feedback)
                 {
                     
@@ -1310,7 +1270,7 @@ class ToiletController extends Controller
 
         
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+       
         
 
         $user_count = Logins::where('g_user_id',$request->g_user_id)->count();
@@ -1322,7 +1282,7 @@ class ToiletController extends Controller
         // $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         //$userid=6;
         $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->count();
-        Log::info("current toilet ".print_r($cur_toilet,true));
+       
         if($cur_toilet==0 || is_null($cur_toilet)){
             $data=array("status"=>"fail","data"=>null, "message"=>"Unknown Toilet id passed");
             return json_encode($data);
@@ -1333,12 +1293,22 @@ class ToiletController extends Controller
         DB::transaction(function() use ($request, $user, $cur_toilet){
             
             $cur_toilet= MSDPToiletRegister::where('OBJECTID',$request->toilet_id)->first();
-            Log::info("current toilet data ".print_r($cur_toilet,true));
+           
             $cur_toilet->CLEAN_REQUEST = $cur_toilet->CLEAN_REQUEST+1;
             if(!$cur_toilet->save()){
                 $data=array("status"=>"fail","data"=>null, "message"=>"Request could not be made for cleaning the toilet");
                     return json_encode($data);
             }
+
+            Mail::queue('email.activate', ['active' => '1', 'toilet' => $cur_toilet], function($message)
+                {
+                    
+                    $message
+                    ->to('rathin.iitb@gmail.com')
+                    ->bcc('tusharshahsp@gmail.com')
+                    ->subject('Toilet Clean Requested: FindaLoo')
+                    ->from('admin@e-yantra.org', 'e-Yantra IITB');
+                });
         });
 
         Log::info("success tushar");
@@ -1363,7 +1333,7 @@ class ToiletController extends Controller
             return json_encode($data);
         }
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+       
         $userdetail=UserRegister::where(['email'=>$user->username])->first();//getting user_id
         
         try{
@@ -1437,7 +1407,7 @@ class ToiletController extends Controller
            $toiletdetails[2]=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE CONDITION_RAW > 3.66') ;
 
 
-            log::info("number of toilets ".print_r($toiletdetails,true));
+            
             if(sizeof($toiletdetails)>0)
             {
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -1450,7 +1420,7 @@ class ToiletController extends Controller
         if($request->criteria==2)
         {
             $max_visit1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Toilet_Visits ) as max_count')  ;
-            Log::info("data test" .print_r($max_visit1,true));
+           
             $max_visit = $max_visit1[0]->max_c;
             
 
@@ -1474,7 +1444,7 @@ class ToiletController extends Controller
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
                 ->havingRaw('COUNT(toilet_id) > 0.75*'.$max_visit)->get();
 
-            log::info("number of toilets ".print_r($toiletdetails,true));
+           
             if(sizeof($toiletdetails)>0)
             {
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -1488,13 +1458,13 @@ class ToiletController extends Controller
         {
  
             $max_issue1=DB::select('SELECT MAX(t) as max_c From ( select  COUNT(toilet_id) as t FROM Report_Issues group by toilet_id) as max_count')  ;
-             Log::info("data test 2" .print_r($max_issue1,true));
+            
             $max_issue = $max_issue1[0]->max_c;
 
             if(is_null($max_issue) || empty($max_issue)){
                 $max_issue = 0;
             }
-            Log::info("max_issue".$max_issue);
+            
             $toiletdetails[0] = ReportIssues::select( DB::raw('COUNT(toilet_id) as toilet_visits'), 'OBJECTID', 'NAME','lat','lng')
                 ->leftjoin('MSDPUSERToilet_Block as mutb','mutb.OBJECTID', '=' ,'toilet_id' )->groupBy('toilet_id')
                 ->havingRaw('COUNT(toilet_id) > 0*'.$max_issue.' AND COUNT(toilet_id) <= 0.25* '.$max_issue)->get();
@@ -1512,7 +1482,7 @@ class ToiletController extends Controller
                 ->havingRaw('COUNT(toilet_id) >0.75*'.$max_issue)->get();
 
 
-            log::info("number of toilets ".print_r($toiletdetails,true));
+           
             if(sizeof($toiletdetails)>0)
             {
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -1525,7 +1495,7 @@ class ToiletController extends Controller
 
          if($request->criteria==4){
             $toiletdetails=DB::select('SELECT OBJECTID, NAME,lat,lng FROM MSDPUSERToilet_Block WHERE ACTIVE = 0')->get() ;
-            log::info("number of toilets ".print_r($toiletdetails,true));
+            
             if(sizeof($toiletdetails)>0)
             {
                 $data=array("status"=>"success","data"=>$toiletdetails, "message"=>"Toilets fetched");
@@ -1566,7 +1536,7 @@ class ToiletController extends Controller
         }
 
         $user = Logins::where('g_user_id',$request->g_user_id)->first();//finding the user from the token
-        Log::info("data ".print_r($user,true));
+        
         $userid=UserRegister::where(['email'=>$user->username])->pluck('id');//getting user_id
         
         DB::transaction(function() use ($request, $userid){
@@ -1733,7 +1703,7 @@ class ToiletController extends Controller
 
         $comments = Comment::where('toilet_id',$request->toilet_id)
         ->leftJoin('User_Register as ur', 'comment.user_id','=','ur.id')->get();//finding the user from the token
-        Log::info("comment data ".print_r($comments,true));
+        
         try{
             
             if(count($comments) >= 1){
