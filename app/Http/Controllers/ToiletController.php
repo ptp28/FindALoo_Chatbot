@@ -26,6 +26,7 @@ use App\Models\MSDPToiletRegister;
 use App\Models\ReportIssues;
 use App\Models\General_Feedback;
 use App\Models\Comment;
+use Carbon\Carbon;
 //image
 use Image;
 use File;
@@ -1719,7 +1720,24 @@ class ToiletController extends Controller
         return json_encode($data); 
     }
 
+    public function toiletRating($id){
+        //$toiletFeedback=ToiletFeedback::where('toilet_id',$id)->first();
 
+        // $toiletFeedback=DB::table('toilet_feedback')
+        // ->select(DB::raw('AVG(cleanliness) c, AVG(maintenance) m, AVG(ambience)'))
+        // ->where('toilet_id',$id)
+        // ->get()
+        // ->groupBy(function($date) {
+        //     return Carbon::parse($date->created_at)->format('W');
+        // });
+        $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness), AVG(maintenance), AVG(ambience), WEEK(created_at) week')
+        ->where('toilet_id',$id)
+        ->groupBy('week')
+        ->get();
+
+        $data=array("status"=>"success","data"=> $toiletFeedback, "message"=>"week wise toilet feedback of a toilet");
+        return json_encode($data);
+    }
 
 
 }

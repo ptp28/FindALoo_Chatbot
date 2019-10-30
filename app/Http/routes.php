@@ -218,5 +218,10 @@ Route::GET('/toiletActive',[
 	'uses' => 'ToiletController@toiletActive'
 ]);
 
+Route::GET('toiletRatings/{id}',[
+	'as' => 'toiletRatings',
+	'uses' => 'ToiletController@toiletRating'
+]);
+
 
 
