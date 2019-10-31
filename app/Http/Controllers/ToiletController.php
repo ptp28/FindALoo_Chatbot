@@ -1720,30 +1720,25 @@ class ToiletController extends Controller
         return json_encode($data); 
     }
 
-    public function toiletRating($id){
-        //$toiletFeedback=ToiletFeedback::where('toilet_id',$id)->first();
+    public function toiletRating(Request $request){
+        $id = $request->query('toiletId');
+        if($id!==null){
+            $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness), AVG(maintenance), AVG(ambience), MONTH(created_at) month')
+            ->where('toilet_id',$id)
+            ->groupBy('month')
+            ->get();
+            Log::info($toiletFeedback->count());
+            if($toiletFeedback->count()==0){
+                $toiletMSDPFeedback = MSDPToiletRegister::where('OBJECTID',$id)->select('CLEANLINESS','MAINTENANCE','AMBIENCE','updated_at')->first();
+                $data=array("status"=>"success","data"=> $toiletMSDPFeedback, "message"=>"current average toilet ratings");
+            return json_encode($data);
+            }
 
-        // $toiletFeedback=DB::table('toilet_feedback')
-        // ->select(DB::raw('AVG(cleanliness) c, AVG(maintenance) m, AVG(ambience)'))
-        // ->where('toilet_id',$id)
-        // ->get()
-        // ->groupBy(function($date) {
-        //     return Carbon::parse($date->created_at)->format('W');
-        // });
-        $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness), AVG(maintenance), AVG(ambience), MONTH(created_at) month')
-        ->where('toilet_id',$id)
-        ->groupBy('month')
-        ->get();
-        Log::info($toiletFeedback->count());
-        if($toiletFeedback->count()==0){
-            $toiletMSDPFeedback = MSDPToiletRegister::where('OBJECTID',$id)->select('CLEANLINESS','MAINTENANCE','AMBIENCE','updated_at')->first();
-            $data=array("status"=>"success","data"=> $toiletMSDPFeedback, "message"=>"current average toilet ratings");
-        return json_encode($data);
+            $data=array("status"=>"success","data"=> $toiletFeedback, "message"=>"month wise toilet ratings");
+            return json_encode($data);
         }
-
-        $data=array("status"=>"success","data"=> $toiletFeedback, "message"=>"month wise toilet ratings");
-        return json_encode($data);
+        $data=array("status"=>"fail", "message"=>"no toilet id found");
+            return json_encode($data);
     }
-
 
 }
