@@ -11,6 +11,6 @@ class UserRegister extends Model{
      * @var string
      */
     protected $table = 'User_Register';
-    
+    public $timestamps= true;
     
 }

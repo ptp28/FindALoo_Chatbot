@@ -12,5 +12,6 @@ class MSDPToiletRegister extends Model{
      */
     protected $table = 'MSDPUSERToilet_Block';
 
-   	protected $key = 'id';
+        protected $key = 'id';
+        public $timestamps= true;
 }

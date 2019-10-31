@@ -1730,12 +1730,18 @@ class ToiletController extends Controller
         // ->groupBy(function($date) {
         //     return Carbon::parse($date->created_at)->format('W');
         // });
-        $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness), AVG(maintenance), AVG(ambience), WEEK(created_at) week')
+        $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness), AVG(maintenance), AVG(ambience), MONTH(created_at) month')
         ->where('toilet_id',$id)
-        ->groupBy('week')
+        ->groupBy('month')
         ->get();
+        Log::info($toiletFeedback->count());
+        if($toiletFeedback->count()==0){
+            $toiletMSDPFeedback = MSDPToiletRegister::where('OBJECTID',$id)->select('CLEANLINESS','MAINTENANCE','AMBIENCE','updated_at')->first();
+            $data=array("status"=>"success","data"=> $toiletMSDPFeedback, "message"=>"current average toilet ratings");
+        return json_encode($data);
+        }
 
-        $data=array("status"=>"success","data"=> $toiletFeedback, "message"=>"week wise toilet feedback of a toilet");
+        $data=array("status"=>"success","data"=> $toiletFeedback, "message"=>"month wise toilet ratings");
         return json_encode($data);
     }
 

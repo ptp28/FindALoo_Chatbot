@@ -10,7 +10,8 @@ class Comment extends Model
     protected $table = 'comment';
     protected $fillable = ['toilet_id',
 							'comment',
-							'user_id'];
+                            'user_id'];
+    public $timestamps= true;                        
 
 	// public function export()
  //    {
