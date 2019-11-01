@@ -1723,13 +1723,13 @@ class ToiletController extends Controller
     public function toiletRating(Request $request){
         $id = $request->query('toiletId');
         if($id!==null){
-            $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness) avg_cleaniness, AVG(maintenance) avg_maintenance, AVG(ambience) avg_ambience, MONTH(created_at) month')
+            $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness) avg_cleaniness, AVG(maintenance) avg_maintenance, AVG(ambience) avg_ambience,AVG(water) avg_water, AVG(safety) avg_safety, MONTH(created_at) month')
             ->where('toilet_id',$id)
             ->groupBy('month')
             ->get();
             Log::info($toiletFeedback->count());
             if($toiletFeedback->count()==0){
-                $toiletMSDPFeedback = MSDPToiletRegister::where('OBJECTID',$id)->select('CLEANLINESS','MAINTENANCE','AMBIENCE','updated_at')->first();
+                $toiletMSDPFeedback = MSDPToiletRegister::where('OBJECTID',$id)->select('CLEANLINESS','MAINTENANCE','AMBIENCE', 'WATER', 'SAFETY','updated_at')->first();
                 $data=array("status"=>"success","data"=> $toiletMSDPFeedback, "message"=>"current average toilet ratings");
             return json_encode($data);
             }
