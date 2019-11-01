@@ -1723,7 +1723,7 @@ class ToiletController extends Controller
     public function toiletRating(Request $request){
         $id = $request->query('toiletId');
         if($id!==null){
-            $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness) avg_cleaniness, AVG(maintenance) avg_maintenance, AVG(ambience) avg_ambience,AVG(water) avg_water, AVG(safety) avg_safety, MONTH(created_at) month')
+            $toiletFeedback = ToiletFeedback::selectRaw('AVG(cleanliness) avg_cleanliness, AVG(maintenance) avg_maintenance, AVG(ambience) avg_ambience,AVG(water) avg_water, AVG(safety) avg_safety, MONTH(created_at) month')
             ->where('toilet_id',$id)
             ->groupBy('month')
             ->get();
