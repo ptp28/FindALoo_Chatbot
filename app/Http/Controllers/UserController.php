@@ -107,7 +107,8 @@ class UserController extends Controller
      */
 
     public function create(Request $request){
-
+        Log::info($request->g_user_id);
+        Log::info($request->user_email);
         $validator = Validator::make($request->all(), [
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
             'user_email' => 'required|email|unique:login,username,'.($request->g_user_id ? ",g_user_id,g_user_id," : ''),
@@ -123,10 +124,10 @@ class UserController extends Controller
         }
 
         $existing = Logins::where('g_user_id',$request->g_user_id)->first();
-        Log::info($existing);
-        Log::info("current username".print_r($existing,true));
+        
+    
         if(!empty($existing) && !is_null($existing)){
-        if($existing->username == $request->user_email){
+            if($existing->username == $request->user_email){
 
             if($existing->fcm_token != $request->user_fcm){
                 $existing->fcm_token = $request->user_fcm;
@@ -172,6 +173,7 @@ class UserController extends Controller
 
             $user_email=$request->user_email;//to prevent serialisation error
             $name = ucwords(strtolower($request->user_name));
+           try{
             Mail::queue('email.user_invite', ['email' => $user_email, 'token' => 'test', 'password' => 'test', 'name' => $name ], function($message) use ($user_email)
             {
                 
@@ -179,7 +181,14 @@ class UserController extends Controller
                 ->to($user_email)
                 ->subject('Registered Succesfully: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
-            });          
+            });    
+            DB::commit();
+           } catch(Exception $e){
+               DB::rollback();
+               $data=array("status"=>"fail","data"=>null, "message"=>"Some error occurred while registering");
+        return json_encode($data);
+           }
+               
         });//end of transaction
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! An aknowledgement email has been sent to your registered email id");
         //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
