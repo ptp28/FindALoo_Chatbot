@@ -123,6 +123,7 @@ class UserController extends Controller
         }
 
         $existing = Logins::where('g_user_id',$request->g_user_id)->first();
+        Log::info($existing);
         Log::info("current username".print_r($existing,true));
         if(!empty($existing) && !is_null($existing)){
         if($existing->username == $request->user_email){

@@ -10,7 +10,7 @@
         "tymon/jwt-auth": "0.5.*",
         "intervention/image": "~2.2",
         "nesbot/carbon": "^1.19.0",
-        "jeremeamia/superclosure":"~2.2"
+        "jeremeamia/superclosure":"^2.4"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
