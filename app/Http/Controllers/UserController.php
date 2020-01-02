@@ -142,6 +142,7 @@ class UserController extends Controller
 
             DB::beginTransaction();
             try{
+                Log::info("1");
             //adding user details
             // $v_token = str_random(50);
             $userdetails=new UserRegister;
@@ -174,15 +175,16 @@ class UserController extends Controller
 
             $user_email=$request->user_email;//to prevent serialisation error
             $name = ucwords(strtolower($request->user_name));
-           
+            Log::info("2");
             Mail::queue('email.user_invite', ['email' => $user_email, 'token' => 'test', 'password' => 'test', 'name' => $name ], function($message) use ($user_email)
             {
-                
+                Log::info("3");
                 $message
                 ->to($user_email)
                 ->subject('Registered Succesfully: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });    
+            Log::info("4");
             DB::commit();
            } catch(Exception $e){
                Log::debug($e);
