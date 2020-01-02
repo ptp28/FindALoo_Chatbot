@@ -88,7 +88,6 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->cc('tusharshahsp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });
@@ -176,7 +175,6 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->bcc('findaloo.eyantra@gmail.com')
                 ->subject('Registered Succesfully: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });          
