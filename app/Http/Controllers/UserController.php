@@ -170,7 +170,8 @@ class UserController extends Controller
             //Send mail to user for confirmation
 
             $user_email=$request->user_email;//to prevent serialisation error
-            Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => 'test', 'password' => 'test', 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
+            $name = ucwords(strtolower($request->user_name));
+            Mail::queue('email.user_invite', ['email' => $user_email, 'token' => 'test', 'password' => 'test', 'name' => $name ], function($message) use ($user_email)
             {
                 
                 $message
