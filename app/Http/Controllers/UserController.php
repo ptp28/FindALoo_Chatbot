@@ -88,7 +88,6 @@ class UserController extends Controller
                 
                 $message
                 ->to($user_email)
-                ->cc('tusharshahsp@gmail.com')
                 ->subject('Registration: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
             });
@@ -108,7 +107,7 @@ class UserController extends Controller
      */
 
     public function create(Request $request){
-
+      
         $validator = Validator::make($request->all(), [
             'user_name' => 'required|min:5|regex:/(^[A-Za-z. ]+$)+/',
             'user_email' => 'required|email|unique:login,username,'.($request->g_user_id ? ",g_user_id,g_user_id," : ''),
@@ -124,22 +123,25 @@ class UserController extends Controller
         }
 
         $existing = Logins::where('g_user_id',$request->g_user_id)->first();
-        Log::info("current username".print_r($existing,true));
+        
+    
         if(!empty($existing) && !is_null($existing)){
-        if($existing->username == $request->user_email){
+            Log::info("user exist in if");
+            if($existing->username == $request->user_email){
 
-            if($existing->fcm_token != $request->user_fcm){
-                $existing->fcm_token = $request->user_fcm;
-                $existing->save();
-            }
+                if($existing->fcm_token != $request->user_fcm){
+                    $existing->fcm_token = $request->user_fcm;
+                    $existing->save();
+                }
             
             $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
             return json_encode($data);
-        }
+            }
         }
 
-        DB::transaction(function() use ($request){
-
+            DB::beginTransaction();
+            try{
+         
             //adding user details
             // $v_token = str_random(50);
             $userdetails=new UserRegister;
@@ -150,9 +152,7 @@ class UserController extends Controller
             // $userdetails->gender=$request->user_gender;
             // $userdetails->age=$request->user_age;
             $userdetails->role=3;//3 is the normal user, 2 is moderator, 1 is admin
-            
 
-            Log::info("Entry made into the Register for".$request->user_email);
             //adding login credentials
             $userlogin=new Logins;
             $userlogin->username=$request->user_email;
@@ -162,25 +162,32 @@ class UserController extends Controller
             $userlogin->active=1;//change it later, -2 for deactivated
             $userlogin->fcm_token=$request->user_fcm;//use it for sending confirmation mail
             $userlogin->save();
-            
-            Log::info("Entry made into the Login table for".$request->user_email);
-
-            
+         
             $userdetails->login_id = $userlogin->getKey();
             $userdetails->save();
             //Send mail to user for confirmation
 
             $user_email=$request->user_email;//to prevent serialisation error
-            Mail::queue('email.user_invite', ['email' => $request->user_email, 'token' => 'test', 'password' => 'test', 'name' => ucwords(strtolower($request->user_name))], function($message) use ($user_email)
+            $name = ucwords(strtolower($request->user_name));
+    
+            Mail::send('email.user_invite', ['email' => $user_email, 'token' => 'test', 'password' => 'test', 'name' => $name ], function($message) use ($user_email)
             {
-                
+    
                 $message
                 ->to($user_email)
-                ->bcc('findaloo.eyantra@gmail.com')
                 ->subject('Registered Succesfully: FindaLoo')
                 ->from('admin@e-yantra.org', 'e-Yantra IITB');
-            });          
-        });//end of transaction
+            });    
+      
+            DB::commit();
+           } catch(Exception $e){
+               Log::debug($e);
+               DB::rollback();
+               $data=array("status"=>"fail","data"=>null, "message"=>"Some error occurred while registering");
+        return json_encode($data);
+           }
+               
+       
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! An aknowledgement email has been sent to your registered email id");
         //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
         return json_encode($data);
@@ -188,7 +195,6 @@ class UserController extends Controller
 
     /*
      * Store a newly created resource in storage.
-     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
