@@ -10,6 +10,8 @@ use App\Models\MSDPToiletRegister;
 use App\Models\Logins;
 use DB;
 use Log;
+use DateTime;
+
 class AdminController extends Controller
 {
     /**
@@ -136,9 +138,12 @@ class AdminController extends Controller
     }
 
     public function luckyDrawResult(){
-        $today = date("Y-m-d");
-        //$today = date("2018-10-17");
-        $users = Logins::select('username')->where('created_at','>=',$today)->lists('username')->toArray();
+        $now   = new DateTime();
+        $now->format('Y-m-d H:i:s');
+        $end = new DateTime();
+        $end->format('Y-m-d H:i:s');
+        $end->modify('+1 day');
+        $users = Logins::select('username')->where('created_at','>=',$now)->where('created_at','<',$end)->lists('username')->toArray();
         if(count($users)>0)
             $user = $users[array_rand($users)];
         else
