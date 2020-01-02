@@ -15,6 +15,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/luckyDraw', [
+	'as' => 'luckyDraw',
+	'uses' => 'AdminController@luckyDraw'
+]);
+
+Route::post('/luckyDraw', [
+	'as' => 'luckyDrawResult',
+	'uses' => 'AdminController@luckyDrawResult'
+]);
+
+
 Route::POST('register/addUser',[
 	'as' => 'addUser',
 	'uses' => 'UserController@create'

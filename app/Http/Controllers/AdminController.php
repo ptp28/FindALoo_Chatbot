@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Models\MSDPToiletRegister;
+use App\Models\Logins;
 use DB;
 use Log;
 class AdminController extends Controller
@@ -128,5 +129,20 @@ class AdminController extends Controller
         
         $data=array("status"=>"success","data"=>null, "message"=>"Toilet status updated");
         return response()->json($data);
+    }
+
+    public function luckyDraw(){
+        return view('lucky_draw');
+    }
+
+    public function luckyDrawResult(){
+        $today = date("Y-m-d");
+        //$today = date("2018-10-17");
+        $users = Logins::select('username')->where('created_at','>=',$today)->lists('username')->toArray();
+        if(count($users)>0)
+            $user = $users[array_rand($users)];
+        else
+            $user = "No user found";    
+        return view('lucky_draw')->with('data',$user);
     }
 }
