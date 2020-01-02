@@ -127,6 +127,7 @@ class UserController extends Controller
         
     
         if(!empty($existing) && !is_null($existing)){
+            Log::info("user exist in if");
             if($existing->username == $request->user_email){
 
                 if($existing->fcm_token != $request->user_fcm){
