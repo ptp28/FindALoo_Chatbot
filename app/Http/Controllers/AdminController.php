@@ -134,7 +134,19 @@ class AdminController extends Controller
     }
 
     public function luckyDraw(){
-        return view('lucky_draw');
+        $now   = new DateTime();
+        $now->format('Y-m-d H:i:s');
+        $end = new DateTime();
+        $end->format('Y-m-d H:i:s');
+        $end->modify('+1 day');
+        $count = Logins::select('username')->where('created_at','>=',$now)->where('created_at','<',$end)->get()->count();
+        $alreadyDraw = Logins::select('username')
+        ->where('created_at','>=',$now)
+        ->where('created_at','<',$end)
+        ->where('lucky',1)
+        ->lists('username')
+        ->toArray();
+        return view('lucky_draw')->with(['count'=>$count, 'lucky_draw_user'=>$alreadyDraw]);
     }
 
     public function luckyDrawResult(){
@@ -143,11 +155,27 @@ class AdminController extends Controller
         $end = new DateTime();
         $end->format('Y-m-d H:i:s');
         $end->modify('+1 day');
-        $users = Logins::select('username')->where('created_at','>=',$now)->where('created_at','<',$end)->lists('username')->toArray();
-        if(count($users)>0)
+        $users = Logins::select('username')
+        ->where('created_at','>=',$now)
+        ->where('created_at','<',$end)
+        ->where('lucky',0)
+        ->lists('username')
+        ->toArray();
+        $alreadyDraw = Logins::select('username')
+        ->where('created_at','>=',$now)
+        ->where('created_at','<',$end)
+        ->where('lucky',1)
+        ->lists('username')
+        ->toArray();
+        $count = count($users);
+        if($count > 0){
             $user = $users[array_rand($users)];
+            $update = Logins::where('username',$user)->first();
+            $update->lucky = false;
+            $update-> save();
+        }
         else
-            $user = "No user found";    
-        return view('lucky_draw')->with('data',$user);
+            $user = "No user found";
+        return view('lucky_draw')->with(['data'=>$user,'count'=>$count, 'lucky_draw_user'=>$alreadyDraw ]);
     }
 }
