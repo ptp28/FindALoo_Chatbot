@@ -129,18 +129,18 @@ class UserController extends Controller
         if(!empty($existing) && !is_null($existing)){
             if($existing->username == $request->user_email){
 
-            if($existing->fcm_token != $request->user_fcm){
-                $existing->fcm_token = $request->user_fcm;
-                $existing->save();
-            }
+                if($existing->fcm_token != $request->user_fcm){
+                    $existing->fcm_token = $request->user_fcm;
+                    $existing->save();
+                }
             
             $data=array("status"=>"success","data"=>null, "message"=>"You have succesfully logged in to the application.");
             return json_encode($data);
-        }
+            }
         }
 
-        DB::transaction(function() use ($request){
-
+            DB::beginTransaction();
+            try{
             //adding user details
             // $v_token = str_random(50);
             $userdetails=new UserRegister;
@@ -173,7 +173,7 @@ class UserController extends Controller
 
             $user_email=$request->user_email;//to prevent serialisation error
             $name = ucwords(strtolower($request->user_name));
-           try{
+           
             Mail::queue('email.user_invite', ['email' => $user_email, 'token' => 'test', 'password' => 'test', 'name' => $name ], function($message) use ($user_email)
             {
                 
@@ -184,12 +184,13 @@ class UserController extends Controller
             });    
             DB::commit();
            } catch(Exception $e){
+               Log::debug($e);
                DB::rollback();
                $data=array("status"=>"fail","data"=>null, "message"=>"Some error occurred while registering");
         return json_encode($data);
            }
                
-        });//end of transaction
+       
         $data=array("status"=>"success","data"=>null, "message"=>"Thank you for registering! An aknowledgement email has been sent to your registered email id");
         //$message=array("success"=>'Thank you for registering! A confirmation email has been sent to your registered email id.');
         return json_encode($data);
