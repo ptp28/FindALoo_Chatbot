@@ -438,12 +438,12 @@ print 'Sorted in ' + i + ' iterations.';</code></pre>
 								<li>
 									<h3>Elsewhere</h3>
 									<ul class="icons">
-										<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-										<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-										<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-										<li><a href="#" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
-										<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
-										<li><a href="#" class="icon brands fa-codepen"><span class="label">Codepen</span></a></li>
+										<li><a href="https://twitter.com/eyantra_iitb?lang=en" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+										<li><a href="https://www.facebook.com/eyantra/" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+										<li><a href="https://www.instagram.com/eyantra/?hl=en" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+										<li><a href="https://www.linkedin.com/company/e-yantraiitb/" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+										<li><a href="https://github.com/eyantra?tab=repositories" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+										{{-- <li><a href="#" class="icon brands fa-codepen"><span class="label">Codepen</span></a></li> --}}
 									</ul>
 								</li>
 							</ul>
