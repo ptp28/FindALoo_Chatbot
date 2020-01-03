@@ -141,13 +141,14 @@ class AdminController extends Controller
         $end->format('Y-m-d H:i:s');
         $end->modify('+1 day');
         $end->settime(0,0);
-        $count = Logins::select('username')->where('created_at','>=',$now)->where('created_at','<',$end)->get()->count();
+       
         $alreadyDraw = Logins::select('username')
         ->where('created_at','>=',$now)
         ->where('created_at','<',$end)
         ->where('lucky',1)
         ->lists('username')
         ->toArray();
+        $count = count($alreadyDraw);
         return view('lucky_draw')->with(['count'=>$count, 'lucky_draw_user'=>$alreadyDraw]);
     }
 
@@ -176,6 +177,7 @@ class AdminController extends Controller
         ->lists('username')
         ->toArray();
         $count = count($users);
+        $todaysWinner = count($alreadyDraw);
         $user = null;
         Log::info($count);
         if($count > 0){
@@ -188,6 +190,6 @@ class AdminController extends Controller
         else{
             $user = "No user found";
         }    
-        return view('lucky_draw')->with(['data'=>$user,'count'=>$count, 'lucky_draw_user'=>$alreadyDraw ]);
+        return view('lucky_draw')->with(['data'=>$user,'count'=>$todaysWinner, 'lucky_draw_user'=>$alreadyDraw ]);
     }
 }
