@@ -136,9 +136,11 @@ class AdminController extends Controller
     public function luckyDraw(){
         $now   = new DateTime();
         $now->format('Y-m-d H:i:s');
+        $now->settime(0,0);
         $end = new DateTime();
         $end->format('Y-m-d H:i:s');
         $end->modify('+1 day');
+        $end->settime(0,0);
         $count = Logins::select('username')->where('created_at','>=',$now)->where('created_at','<',$end)->get()->count();
         $alreadyDraw = Logins::select('username')
         ->where('created_at','>=',$now)
@@ -151,12 +153,15 @@ class AdminController extends Controller
 
     public function luckyDrawResult(){
         $now   = new DateTime();
-        $now->format('Y-m-d');
-        Log::info($now->format('Y-m-d'));
+        $now->format('Y-m-d H:i:s');
+        $now->settime(0,0);
+
+        Log::info($now->format('Y-m-d H:i:s'));
         $end = new DateTime();
-        $end->format('Y-m-d');
+        $end->format('Y-m-d H:i:s');
         $end->modify('+1 day');
-        Log::info($end->format('Y-m-d'));
+        $end->settime(0,0);
+        Log::info($end->format('Y-m-d H:i:s'));
         $users = Logins::select('username')
         ->where('created_at','>=',$now)
         ->where('created_at','<',$end)
