@@ -151,10 +151,10 @@ class AdminController extends Controller
 
     public function luckyDrawResult(){
         $now   = new DateTime();
-        $now->format('Y-m-d H:i:s');
+        $now->format('Y-m-d');
         Log::info($now->format('Y-m-d H:i:s'));
         $end = new DateTime();
-        $end->format('Y-m-d H:i:s');
+        $end->format('Y-m-d');
         $end->modify('+1 day');
         Log::info($end->format('Y-m-d H:i:s'));
         $users = Logins::select('username')
