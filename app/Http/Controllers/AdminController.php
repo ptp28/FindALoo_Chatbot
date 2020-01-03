@@ -152,15 +152,18 @@ class AdminController extends Controller
     public function luckyDrawResult(){
         $now   = new DateTime();
         $now->format('Y-m-d H:i:s');
+        Log::info($now);
         $end = new DateTime();
         $end->format('Y-m-d H:i:s');
         $end->modify('+1 day');
+        Log::info($end);
         $users = Logins::select('username')
         ->where('created_at','>=',$now)
         ->where('created_at','<',$end)
         ->where('lucky',0)
         ->lists('username')
         ->toArray();
+        Log::info($users);
         $alreadyDraw = Logins::select('username')
         ->where('created_at','>=',$now)
         ->where('created_at','<',$end)
@@ -168,14 +171,18 @@ class AdminController extends Controller
         ->lists('username')
         ->toArray();
         $count = count($users);
+        $user = null;
+        Log::info($count);
         if($count > 0){
+            Log::info('inside if');
             $user = $users[array_rand($users)];
             $update = Logins::where('username',$user)->first();
             $update->lucky = false;
             $update-> save();
         }
-        else
+        else{
             $user = "No user found";
+        }    
         return view('lucky_draw')->with(['data'=>$user,'count'=>$count, 'lucky_draw_user'=>$alreadyDraw ]);
     }
 }
