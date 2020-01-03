@@ -451,7 +451,7 @@ print 'Sorted in ' + i + ' iterations.';</code></pre>
 					</section>
 
 				<!-- Copyright -->
-					<div class="copyright">&copy; Untitled. All rights reserved. Design: .</div>
+					<div class="copyright">&copy; e-Yantra IIT Bombay. All rights reserved.</div>
 
 			</div>
 
