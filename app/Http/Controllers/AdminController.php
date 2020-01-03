@@ -184,7 +184,7 @@ class AdminController extends Controller
             Log::info('inside if');
             $user = $users[array_rand($users)];
             $update = Logins::where('username',$user)->first();
-            $update->lucky = false;
+            $update->lucky = true;
             $update-> save();
         }
         else{
